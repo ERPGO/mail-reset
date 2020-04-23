@@ -1,0 +1,2 @@
+id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
+access_mail_reset_mail_reset,mail_reset.mail_reset,model_mail_reset_mail_reset,,1,0,0,0
