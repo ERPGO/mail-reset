@@ -1,0 +1,13 @@
+<odoo>
+        <template id="some-id">
+            <form action="/mail_reset/ask"  method="post" data-success_page="/thanks">
+               <div>    
+                   <label for="email">E-mail address</label>   
+                     <div class="col-md-7 col-sm-8">       
+                         <input type="text" name="email" required="1"/>
+                         <button type="submit" class="btn btn-primary" name="Submit">Submit</button>
+                     </div>
+                </div>   
+            </form>
+        </template>
+</odoo>
