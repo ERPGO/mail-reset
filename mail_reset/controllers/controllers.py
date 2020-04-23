@@ -1,11 +1,12 @@
 # -*- coding: utf-8 -*-
 from odoo import http
 
-# class MailReset(http.Controller):
-#     @http.route('/mail_reset/mail_reset/', auth='public')
-#     def index(self, **kw):
-#         return "Hello, world"
-
+class MailReset(http.Controller):
+    @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
+    def index(self, **kw):
+        email = kw.get('email')
+        return email
+    
 #     @http.route('/mail_reset/mail_reset/objects/', auth='public')
 #     def list(self, **kw):
 #         return http.request.render('mail_reset.listing', {
