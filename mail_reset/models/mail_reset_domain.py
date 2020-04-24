@@ -4,6 +4,7 @@ from odoo import models, fields, api
 
 class Mail_Reset_Domain(models.Model):
     _name = 'mail_reset.domain'
+    _description = 'Mail Domain'
 
     name = fields.Char(string="Domain name")
     contact = fields.Char(string="Contact")
