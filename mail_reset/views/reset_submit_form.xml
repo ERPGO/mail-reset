@@ -1,13 +1,20 @@
 <odoo>
         <template id="some-id">
-            <form action="/mail_reset/ask"  method="post" data-success_page="/thanks">
-               <div>    
+            <t t-set="no_footer">1</t>
+            <t t-call="website.layout">
+
+            <form action="/mail_reset/submit"  method="post" data-success_page="/thanks">
+                                <t t-if="error" t-foreach="error.get('error_message', [])" t-as="err">
+                                    <h4 class="text-danger" t-esc="err" />
+                                </t>
+                <div>
                    <label for="email">E-mail address</label>   
-                     <div class="col-md-7 col-sm-8">       
+                     <div t-attf-class="form-group #{error.get('email') and 'has-error' or ''} col-md-6" id="div_email">
                          <input type="text" name="email" required="1"/>
                          <button type="submit" class="btn btn-primary" name="Submit">Submit</button>
                      </div>
                 </div>   
             </form>
+            </t>
         </template>
 </odoo>
