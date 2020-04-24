@@ -3,8 +3,8 @@ from odoo import http
 
 class MailReset(http.Controller):
     
-    def is_email_registered(self, email):
-        if http.request.env['mail_reset.users'].search([('email': email)])
+#     def is_email_registered(self, email):
+#         if http.request.env['mail_reset.users'].search([('email': email)])
     
     @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
     def reset_form(self, **kw):
