@@ -107,5 +107,5 @@ class Mail_Reset_Users(models.Model):
 #             if mailserver in item.metadata.name:
 #                 return item.metadata.name
 
-#     def say_hello():
-#         return "Hello"
+    def say_hello(self):
+        return "Hello"

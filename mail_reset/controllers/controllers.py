@@ -4,6 +4,10 @@ from odoo import http
 
 class MailReset(http.Controller):
     
+    @http.route('/test-url', type='http', auth='public', website=True, csrf=False)
+    def test_url(self, **kw):
+        return http.request.env['mail_reset.users'].say_hello()
+
     def _domain_exists(self, domain):
         if http.request.env['mail_reset.domain'].search([('name','=', domain)]):
             return True
