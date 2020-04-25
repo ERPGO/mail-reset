@@ -2,7 +2,8 @@
 
 from odoo import models, exceptions, fields, api, _
 from datetime import datetime, timedelta
-import requests
+# from kubernetes import client, config
+
 
 
 def random_token():
@@ -83,17 +84,28 @@ class Mail_Reset_Users(models.Model):
         res._set_email()
         return res
                 
-    
-    def _get_mailserver(self)
-        auth_token = self.domain.api_token
-        hed = {'Authorization': 'Bearer ' + auth_token}
+#     def _get_k8s_conf(k8s_api_url, token):
+#         configuration = client.Configuration()
+#         configuration.api_key["authorization"] = token
+#         configuration.api_key_prefix['authorization'] = 'Bearer'
+#         configuration.host = k8s_api_url
+#         configuration.verify_ssl = False
+#         return configuration
 
-        url = self.domain.api_url + '/api/v1/namespaces/default/pods'
-        # response = requests.post(url, headers=hed)
-        response = requests.get(url, headers=hed, verify=False)
-        # print(response)
-        rjson = response.json()
+#     def _get_pods(api_url, api_token):  
+#         configuration = get_k8s_conf(k8s_api_url,token)
+#         v1 = client.CoreV1Api(client.ApiClient(configuration))
+#         pod_list = v1.list_namespaced_pod("default", pretty=False)
+#         return pod_list
+
+#     def _get_mailserver_name(self):
+#         api_url = self.domain.api_url
+#         api_token = self.domain.api_token
         
-        for item in rjson['items']:
-            if 'mailserver' in item['metadata']['name']:
-                return item['metadata']['name']
+#         pod_list = get_pods(api_url, api_token)
+#         for pod in pod_list:
+#             if mailserver in item.metadata.name:
+#                 return item.metadata.name
+
+#     def say_hello():
+#         return "Hello"
