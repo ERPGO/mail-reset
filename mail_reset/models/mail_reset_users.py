@@ -82,22 +82,18 @@ class Mail_Reset_Users(models.Model):
         res = super(Mail_Reset_Users, self).create(vals)
         res._set_email()
         return res
-
+                
     
-#     auth_token='kbkcmbkcmbkcbc9ic9vixc9vixc9v'
-#     hed = {'Authorization': 'Bearer ' + auth_token}
-#     data = {'app' : 'aaaaa'}
+    def _get_mailserver(self)
+        auth_token = self.domain.api_token
+        hed = {'Authorization': 'Bearer ' + auth_token}
 
-#     url = 'https://api.xy.com'
-#     response = requests.post(url, json=data, headers=hed)
-#     print(response)
-#     print(response.json())
-
-#     def get_k8s_conf(self):
-#         configuration = client.Configuration()
-#         configuration.api_key["authorization"] = self.token
-#         configuration.api_key_prefix['authorization'] = 'Bearer'
-#         configuration.host = self.k8s_api_url
-#         configuration.verify_ssl = False
-#         return configuration
+        url = self.domain.api_url + '/api/v1/namespaces/default/pods'
+        # response = requests.post(url, headers=hed)
+        response = requests.get(url, headers=hed, verify=False)
+        # print(response)
+        rjson = response.json()
         
+        for item in rjson['items']:
+            if 'mailserver' in item['metadata']['name']:
+                return item['metadata']['name']
