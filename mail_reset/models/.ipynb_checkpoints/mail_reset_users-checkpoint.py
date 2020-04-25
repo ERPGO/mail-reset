@@ -74,3 +74,18 @@ class Mail_Reset_Users(models.Model):
         res = super(Mail_Reset_Users, self).create(vals)
         res._set_email()
         return res
+    
+    @api.multi
+    def _domain_exists(self, domain):
+        if self.search([('name','=', domain)]):
+            return True
+    
+    @api.multi
+    def _email_registered(self, email):
+        domain = email.split('@')[1]
+        if self._domain_exists(domain):
+            username = self.search([('email','=', email),('domain','=',domain)])
+            if username:
+                return True
+            else:
+                return False
