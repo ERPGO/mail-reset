@@ -2,11 +2,19 @@
 
 from odoo import models, exceptions, fields, api, _
 from datetime import datetime, timedelta
+import requests
+
 
 def random_token():
     # the token has an entropy of about 120 bits (6 bits/char * 20 chars)
     chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
     return ''.join(random.SystemRandom().choice(chars) for _ in range(20))
+
+def _generate_password():
+    s = "abcdefghijklmnopqrstuvwxyz01234567890ABCDEFGHIJKLMNOPQRSTUVWXYZ!@#$%^&*()?"
+    passlen = 8
+    p =  "".join(random.sample(s,passlen ))
+    return p
 
 
 class Mail_Reset_Users(models.Model):
@@ -74,18 +82,22 @@ class Mail_Reset_Users(models.Model):
         res = super(Mail_Reset_Users, self).create(vals)
         res._set_email()
         return res
+
     
-    @api.multi
-    def _domain_exists(self, domain):
-        if self.search([('name','=', domain)]):
-            return True
-    
-    @api.multi
-    def _email_registered(self, email):
-        domain = email.split('@')[1]
-        if self._domain_exists(domain):
-            username = self.search([('email','=', email),('domain','=',domain)])
-            if username:
-                return True
-            else:
-                return False
+#     auth_token='kbkcmbkcmbkcbc9ic9vixc9vixc9v'
+#     hed = {'Authorization': 'Bearer ' + auth_token}
+#     data = {'app' : 'aaaaa'}
+
+#     url = 'https://api.xy.com'
+#     response = requests.post(url, json=data, headers=hed)
+#     print(response)
+#     print(response.json())
+
+#     def get_k8s_conf(self):
+#         configuration = client.Configuration()
+#         configuration.api_key["authorization"] = self.token
+#         configuration.api_key_prefix['authorization'] = 'Bearer'
+#         configuration.host = self.k8s_api_url
+#         configuration.verify_ssl = False
+#         return configuration
+        
