@@ -89,6 +89,7 @@ class Mail_Reset_Users(models.Model):
     domain = fields.Many2one('mail_reset.domain', string="Domain")
     recovery_email = fields.Char(string="Recovery email")
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
+    new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
     
     @api.depends('domain','username')
     def _set_email(self):
@@ -149,4 +150,14 @@ class Mail_Reset_Users(models.Model):
                       stdout=True, tty=False)
         
         print("Response: " + resp)
-        return f"New Password is: {str(random_temp_password)}"
+        self.new_password = random_temp_password
+        return self.new_password
+            
+    @api.one
+    def send_reset_email(self):
+        template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
+        if template.send_mail(self.id,force_send=True):
+            return "Reset mail has been sent to recovery email address!!!"
+        else:
+            return "Something went wrong!!!"
+        

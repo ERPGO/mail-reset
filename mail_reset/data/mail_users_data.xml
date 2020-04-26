@@ -1,0 +1,33 @@
+<odoo>
+    <data noupdate="1">
+        
+        <record id="mail_users_reset_password" model="mail.template">
+            <field name="name">Mail password reset</field>
+            <field name="model_id" ref="mail_reset.model_mail_reset_users"/>
+            <field name="email_from"><![CDATA[Erpgo Mail Service <mail-reset@erpgo.az>]]></field>
+            <field name="email_to">${object.recovery_email|safe}</field>
+            <field name="subject">Mail password reset</field>
+            <field name="reply_to">support@erpgo.az</field>
+            <field name="body_html"><![CDATA[
+<div style="font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;padding:0px;width:600px;margin:auto;background: #FFFFFF repeat top /100%;color:#777777">
+    <table cellspacing="0" cellpadding="0" style="background-color:transparent;border-collapse:collapse;width:600px;background:inherit;color:inherit">
+        <tbody><tr>
+            <td valign="center" width="200" style="padding:10px 10px 10px 5px;font-size: 12px">
+                <img src="/logo.png" style="vertical-align:middle;border-left-width:0px;border-bottom-width:0px;border-right-width:0px;border-top-width:0px;padding: 0px; margin: 0px; height: auto; width: 80px;" alt="${user.company_id.name}">
+            </td>
+        </tr></tbody>
+    </table>
+</div>
+<div style="font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;padding:0px;width:600px;margin:auto;background: #FFFFFF repeat top /100%;color:#777777">
+    <p style="margin:0px 0px 9px 0px;font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;">Dear ${object.name},</p>
+    <p style="margin:0px 0px 9px 0px;font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;"><br></p><p style="margin:0px 0px 9px 0px;font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;">Password is: ${object.new_password}</p><p style="margin:0px 0px 9px 0px;font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;"><br></p>
+    <p style="margin:0px 0px 9px 0px;font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;">Best regards,</p>
+</div>
+<div style="font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;padding:0px;width:600px;margin:auto; margin-top: 10px; background: #fff repeat top /100%;color:#777777"> Erpgo<p style="margin:0px 0px 9px 0px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;font-size: 11px; margin-top: 10px;">
+        <strong style="font-weight:bold;">Sent by Erpgo Mail Service
+</strong></p></div>
+]]></field>
+            <field name="user_signature" eval="False"/>
+        </record>
+    </data>
+</odoo>
