@@ -89,7 +89,6 @@ class Mail_Reset_Users(models.Model):
     domain = fields.Many2one('mail_reset.domain', string="Domain")
     recovery_email = fields.Char(string="Recovery email")
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
-    new_password = fields.Char(strig="")
     
     @api.depends('domain','username')
     def _set_email(self):

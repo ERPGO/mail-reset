@@ -9,7 +9,6 @@ from kubernetes import client, config
 from kubernetes.stream import stream
 
 
-
 def random_token():
     # the token has an entropy of about 120 bits (6 bits/char * 20 chars)
     chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789'
@@ -89,7 +88,6 @@ class Mail_Reset_Users(models.Model):
     domain = fields.Many2one('mail_reset.domain', string="Domain")
     recovery_email = fields.Char(string="Recovery email")
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
-    new_password = fields.Char(strig="")
     
     @api.depends('domain','username')
     def _set_email(self):
