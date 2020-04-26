@@ -1,16 +1,22 @@
 # -*- coding: utf-8 -*-
 from odoo import http
+# from ..mail_reset import mail_resset_users.Mail_Reset_Users
 
 class MailReset(http.Controller):
     
+    @http.route('/test-url', type='http', auth='public', website=True, csrf=False)
+    def test_url(self, **kw):
+        return http.request.env['mail_reset.users'].say_hello()
+
     def _domain_exists(self, domain):
         if http.request.env['mail_reset.domain'].search([('name','=', domain)]):
             return True
     
     def _email_registered(self, email):
         domain = email.split('@')[1]
+        username = email.split('@')[0]
         if self._domain_exists(domain):
-            username = http.request.env['mail_reset.users'].search([('email','=', email),('domain','=',domain)])
+            username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
             if username:
                 return True
             else:
@@ -25,7 +31,11 @@ class MailReset(http.Controller):
     def reset_form_submit(self, **kw):
         email = kw.get('email')
         if self._email_registered(email):
-            return f"Reset instructions has been sent to your recovery email"
+            domain = email.split('@')[1]
+            username = email.split('@')[0]
+            username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
+            return username.reset_mail_password()[0]
+#             return f"Reset instructions has been sent to your recovery email"
         else:
             return f"{email} is not registered"
             
