@@ -18,7 +18,7 @@
 
       
       <record model="ir.ui.view" id="mail_reset_users_form">
-          <field name="name">Mail Users list</field>
+          <field name="name">Mail Users form</field>
           <field name="model">mail_reset.users</field>
           <field name="arch" type="xml">
 
