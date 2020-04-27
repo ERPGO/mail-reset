@@ -20,7 +20,7 @@
     'version': '0.1',
 
     # any module necessary for this one to work correctly
-    'depends': ['base','mail'],
+    'depends': ['base', 'mail'],
 
     # always loaded
     'data': [
@@ -29,6 +29,8 @@
 #         'views/templates.xml',
         'views/reset_submit_form.xml',
         'data/mail_users_data.xml',
+#         'views/reset_domain.xml',
+        'views/reset_users.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

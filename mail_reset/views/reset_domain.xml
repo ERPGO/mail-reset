@@ -1,0 +1,16 @@
+<odoo>
+  <data>
+      
+     <record model="ir.ui.view" id="mail_reset_domain_list">
+      <field name="name">Mail Domain list</field>
+      <field name="model">mail_reset.domain</field>
+      <field name="arch" type="xml">
+
+
+
+      </field>
+    </record>    
+      
+      
+  </data>
+</odoo>
