@@ -1,16 +1,57 @@
 <odoo>
   <data>
       
-     <record model="ir.ui.view" id="mail_reset_domain_list">
-      <field name="name">Mail Domain list</field>
-      <field name="model">mail_reset.domain</field>
-      <field name="arch" type="xml">
+    <record model="ir.ui.view" id="mail_reset_users_list">
+          <field name="name">Mail Users list</field>
+          <field name="model">mail_reset.users</field>
+          <field name="arch" type="xml">
+
+            <tree>
+                <field name="name"/>
+                <field name="username"/>
+            </tree>
 
 
-
-      </field>
-    </record>    
+          </field>
+    </record>
       
+
+      
+      <record model="ir.ui.view" id="mail_reset_users_form">
+          <field name="name">Mail Users list</field>
+          <field name="model">mail_reset.users</field>
+          <field name="arch" type="xml">
+
+                <form>
+                    <sheet string="Users">
+                        <group col="4">
+                            <field name="name" modifiers="{}"/>
+                            <field name="username" on_change="1" modifiers="{}"/>
+                            <field name="domain" on_change="1" can_create="true" can_write="true" modifiers="{}"/>
+                            <field name="recovery_email" modifiers="{}"/>
+                            <field name="email" modifiers="{&quot;readonly&quot;: true}"/>
+                            <separator/>
+                        </group>
+                    </sheet>
+                </form>
+
+          </field>
+      </record>      
+      
+      
+      
+      <record model="ir.actions.act_window" id="mail_reset_users_window">
+          <field name="name">Mail Users</field>
+          <field name="res_model">mail_reset.users</field>
+          <field name="view_mode">tree,form</field> 
+      </record>
+
+      
+      
+      <menuitem name="Mail Reset" id="mail_reset.menu_root"/>
+      
+      <menuitem name="Mail Users" id="mail_reset.menu_users" parent="mail_reset.menu_root" 
+                action="mail_reset_users_window" sequence="2"/>
       
   </data>
 </odoo>
