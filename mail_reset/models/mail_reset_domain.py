@@ -7,7 +7,7 @@ class Mail_Reset_Domain(models.Model):
     _description = 'Mail Domain'
 
     name = fields.Char(string="Domain name")
-    contact = fields.Char(string="Contact")
+    contact = fields.Many2one('res.partner', string="Contact")
     api_url = fields.Char(string="API URL")
     api_token = fields.Char(string="API Token")
     host = fields.Char(string="Host")

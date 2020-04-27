@@ -1,15 +1,57 @@
 <odoo>
   <data>
       
-     <record model="ir.ui.view" id="mail_reset_domain_list">
-      <field name="name">Mail Domain list</field>
-      <field name="model">mail_reset.domain</field>
-      <field name="arch" type="xml">
+    <record model="ir.ui.view" id="mail_reset_domain_list">
+          <field name="name">Mail Domain list</field>
+          <field name="model">mail_reset.domain</field>
+          <field name="arch" type="xml">
+
+            <tree>
+                <field name="name"/>
+                <field name="contact"/>
+            </tree>
 
 
+          </field>
+    </record>
+      
 
-      </field>
-    </record>    
+      
+      
+      <record model="ir.ui.view" id="mail_reset_users_form">
+          <field name="name">Mail Domain form</field>
+          <field name="model">mail_reset.domain</field>
+          <field name="arch" type="xml">
+
+                <form>
+                    <sheet string="Domain">
+                        <group col="4">
+                            <field name="name"/>
+                            <field name="contact"/>
+                            <field name="api_url"/>
+                            <field name="api_token"/>
+                            <field name="host"/>
+                            <field name="database"/>
+                            <field name="user"/>
+                            <field name="password"/>
+                            <separator/>
+                        </group>
+                    </sheet>
+                </form>
+
+          </field>
+      </record>      
+        
+      <record model="ir.actions.act_window" id="mail_reset_domain_window">
+          <field name="name">Mail Domain</field>
+          <field name="res_model">mail_reset.domain</field>
+          <field name="view_mode">tree,form</field> 
+      </record>
+      
+      
+      <menuitem name="Mail Domain" id="mail_reset.menu_domain" parent="mail_reset.menu_root" 
+                action="mail_reset_domain_window" sequence="3"/>
+      
       
       
   </data>
