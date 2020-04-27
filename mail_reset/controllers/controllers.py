@@ -7,20 +7,18 @@ class MailReset(http.Controller):
     @http.route('/test-url', type='http', auth='public', website=True, csrf=False)
     def test_url(self, **kw):
         return http.request.env['mail_reset.users'].say_hello()
-
-    def _domain_exists(self, domain):
-        if http.request.env['mail_reset.domain'].search([('name','=', domain)]):
-            return True
     
-    def _email_registered(self, email):
+    def _get_user(self, email):
         domain = email.split('@')[1]
         username = email.split('@')[0]
-        if self._domain_exists(domain):
-            username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
-            if username:
-                return True
-            else:
-                return False
+        username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
+        return username
+    
+    def _email_registered(self, email):
+        if self._get_user(email):
+            return True
+        else:
+            return False
     
     @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
     def reset_form(self, **kw):
@@ -31,10 +29,9 @@ class MailReset(http.Controller):
     def reset_form_submit(self, **kw):
         email = kw.get('email')
         if self._email_registered(email):
-            domain = email.split('@')[1]
-            username = email.split('@')[0]
-            username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
-            return username.reset_mail_password()[0]
+            user = self._get_user(email)
+            user.reset_mail_password()
+            return user.send_reset_email()[0]
 #             return f"Reset instructions has been sent to your recovery email"
         else:
             return f"{email} is not registered"
