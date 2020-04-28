@@ -11,7 +11,10 @@ class MailReset(http.Controller):
     def _get_user(self, email):
         domain = email.split('@')[1]
         username = email.split('@')[0]
-        username = http.request.env['mail_reset.users'].search([('username','=', username),('domain','=',domain)],limit=1)
+        username = http.request.env['mail_reset.users'].search([
+            ('username','=', username),
+            ('active','=', True),
+            ('domain','=',domain)],limit=1)
         return username
     
     def _email_registered(self, email):

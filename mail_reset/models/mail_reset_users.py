@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, exceptions, fields, api, _
+from odoo.tools import pycompat
+
 from datetime import datetime, timedelta
 import crypt
 import random
@@ -8,7 +10,9 @@ import random
 from kubernetes import client, config
 from kubernetes.stream import stream
 
-
+def now(**kwargs):
+    dt = datetime.now() + timedelta(**kwargs)
+    return fields.Datetime.to_string(dt)
 
 def random_token():
     # the token has an entropy of about 120 bits (6 bits/char * 20 chars)
@@ -40,51 +44,48 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
-#     token = fields.Char(copy=False, groups="base.group_erp_manager")
-#     reset_expiration = fields.Datetime(copy=False, groups="base.group_erp_manager")
-#     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid')
+    token = fields.Char(copy=False, groups="base.group_erp_manager")
+    reset_expiration = fields.Datetime(copy=False, groups="base.group_erp_manager")
+    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid')
 #     reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
 
     
-#     @api.multi
-#     def reset_cancel(self):
-#         return self.write({'token': False, 'reset_expiration': False})
+    @api.multi
+    def reset_cancel(self):
+        return self.write({'token': False, 'reset_expiration': False})
 
-#     @api.multi
-#     def reset_prepare(self):
-#         expiration = datetime.(now) + timedelta(hours=24)
-#         for partner in self:
-#             if expiration or not partner.reset_valid:
-#                 token = random_token()
-#                 while self._signup_retrieve_partner(token):
-#                     token = random_token()
-#                 partner.write({'token': token, 'expiration': expiration})
-#         return True
+    @api.multi
+    def reset_prepare(self):
+        expiration = datetime.now() + timedelta(hours=24)
+        for partner in self:
+            if expiration or not partner.reset_valid:
+                token = random_token()
+                while self._signup_retrieve_partner(token):
+                    token = random_token()
+                partner.write({'token': token, 'reset_expiration': expiration})
+        return True
 
-#     @api.multi
-#     @api.depends('token', 'reset_expiration')
-#     def _compute_reset_valid(self):
-#         dt = now()
-#         for partner, partner_sudo in pycompat.izip(self, self.sudo()):
-#             partner.reset_valid = bool(partner.token) and \
-#             (not partner.reset_expiration or dt <= partner.reset_expiration)
+    @api.multi
+    @api.depends('token', 'reset_expiration')
+    def _compute_reset_valid(self):
+        dt = now()
+        for partner, partner_sudo in pycompat.izip(self, self.sudo()):
+            partner.reset_valid = bool(partner.token) and \
+            (not partner.reset_expiration or dt <= partner.reset_expiration)
 
             
-#     @api.model
-#     def _signup_retrieve_partner(self, token):
-#         partner = self.search([('token', '=', token)], limit=1)
-#         if not partner:
-#             if raise_exception:
-#                 raise exceptions.UserError(_("Reset token '%s' is not valid") % token)
-#             return False
-#         if  not partner.reset_valid:
-#             if raise_exception:
-#                 raise exceptions.UserError(_("Reset token '%s' is no longer valid") % token)
-#             return False
-#         return partner
+    @api.model
+    def _signup_retrieve_partner(self, token):
+        partner = self.search([('token', '=', token)], limit=1)
+        if not partner:
+            return False
+        if  not partner.reset_valid:
+            return False
+        return partner
             
             
     name = fields.Char(string="Full Name")
+    active = fields.Boolean(string="Active", default=True)
     username = fields.Char(string="Username")
     domain = fields.Many2one('mail_reset.domain', string="Domain")
     recovery_email = fields.Char(string="Recovery email")
@@ -150,13 +151,13 @@ class Mail_Reset_Users(models.Model):
                       stdout=True, tty=False)
         
         print("Response: " + resp)
-        self.new_password = random_temp_password
+        self.sudo().new_password = random_temp_password
         return self.new_password
             
     @api.one
     def send_reset_email(self):
         template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
-        if template.send_mail(self.id,force_send=True):
+        if template.sudo().send_mail(self.id,force_send=True):
             return "Reset mail has been sent to recovery email address!!!"
         else:
             return "Something went wrong!!!"
