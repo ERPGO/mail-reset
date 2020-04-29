@@ -60,7 +60,7 @@ class Mail_Reset_Users(models.Model):
         for partner in self:
             if expiration or not partner.reset_valid:
                 token = random_token()
-                while self._signup_retrieve_partner(token):
+                while self._reset_retrieve_partner(token):
                     token = random_token()
                 partner.write({'token': token, 'reset_expiration': expiration})
         return True
@@ -75,7 +75,7 @@ class Mail_Reset_Users(models.Model):
 
             
     @api.model
-    def _signup_retrieve_partner(self, token):
+    def _reset_retrieve_partner(self, token):
         partner = self.search([('token', '=', token)], limit=1)
         if not partner:
             return False
