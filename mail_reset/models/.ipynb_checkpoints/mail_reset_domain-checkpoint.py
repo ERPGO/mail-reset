@@ -10,12 +10,8 @@ class Mail_Reset_Domain(models.Model):
     contact = fields.Many2one('res.partner', string="Contact")
     api_url = fields.Char(string="API URL")
     api_token = fields.Char(string="API Token")
-    host = fields.Char(string="Host")
-    database = fields.Char(string="Database") 
-    user = fields.Char(string="User")
-    password = fields.Char(string="Password")
     
     #this is for minimum "." symbol requirement in name field
-#     if not any(char.isdigit() for char in passwd): 
+#     if not any(char.isdigit() for char in pawsswd): 
 #         print('Password should have at least one numeral') 
 #         val = False

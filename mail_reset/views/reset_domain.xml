@@ -30,10 +30,6 @@
                             <field name="contact"/>
                             <field name="api_url"/>
                             <field name="api_token"/>
-                            <field name="host"/>
-                            <field name="database"/>
-                            <field name="user"/>
-                            <field name="password"/>
                             <separator/>
                         </group>
                     </sheet>
