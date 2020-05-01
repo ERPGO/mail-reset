@@ -2,6 +2,9 @@
 
 from odoo import models, exceptions, fields, api, _
 from odoo.tools import pycompat
+from odoo.exceptions import Warning
+
+import werkzeug.urls
 
 from datetime import datetime, timedelta
 import crypt
@@ -46,10 +49,22 @@ class Mail_Reset_Users(models.Model):
 
     token = fields.Char(copy=False, groups="base.group_erp_manager")
     reset_expiration = fields.Datetime(copy=False, groups="base.group_erp_manager")
-    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid')
-#     reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
+    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
+    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
 
-    
+
+    @api.one
+    def _compute_reset_url(self):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        query = dict()
+        route = 'reset_password'
+        fragment = dict()
+        if self.reset_valid:
+            self.reset_prepare()
+        if self.token:
+            query['token'] = self.token
+            self.reset_url = werkzeug.urls.url_join(base_url, "/mail_reset/%s?%s" % (route, werkzeug.urls.url_encode(query)))
+
     @api.multi
     def reset_cancel(self):
         return self.write({'token': False, 'reset_expiration': False})
