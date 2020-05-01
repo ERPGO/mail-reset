@@ -25,6 +25,7 @@
 
                 <form>
                     <button name ="check_api_rights" type="object" string="API Rights" class="oe_highlight"/>
+                    <field name="state" widget="statusbar" statusbar_visible="draft,success,fail"/>
                     <sheet string="Domain">
                         <group col="4">
                             <field name="name"/>
