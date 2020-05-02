@@ -28,7 +28,7 @@ class MailReset(http.Controller):
         email = kw.get('email')
         return http.request.render('mail_reset.some-id')
 
-    @http.route('/mail_reset/submit', methods=['POST'], type='http', auth='public', website=True, csrf=False)
+    @http.route('/mail_reset/submit', methods=['POST'], type='http', auth='public', website=True, csrf=True)
     def reset_form_submit(self, **kw):
         email = kw.get('email')
         if self._email_registered(email):

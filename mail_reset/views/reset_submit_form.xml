@@ -1,6 +1,7 @@
 <odoo>
         <template id="some-id">
             <form action="/mail_reset/submit"  method="post" data-success_page="/thanks">
+                <input type="hidden" name="csrf_token" t-att-value="request.csrf_token()"/>
                 <div>
                    <label for="email">E-mail address</label>   
                          <input type="text" name="email" required="1"/>
