@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
-from odoo import http
-# from ..mail_reset import mail_resset_users.Mail_Reset_Users
+from odoo import http, _
+from odoo.exceptions import UserError
+import werkzeug
+import time
 
 class MailReset(http.Controller):
     
@@ -24,16 +26,50 @@ class MailReset(http.Controller):
             return False
     
     @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
-    def reset_form(self, **kw):
+    def reset_ask_form(self, **kw):
         email = kw.get('email')
         return http.request.render('mail_reset.some-id')
+
+    @http.route('/mail_reset/reset_password', type='http', auth='public', website=True, sitemap=False)
+    def reset_mail_password_form(self, **kw):
+        qcontext = http.request.params.copy()
+        if not qcontext.get('token'):
+            raise werkzeug.exceptions.NotFound()
+        token = qcontext.get('token')
+        user = http.request.env['mail_reset.users'].sudo()._reset_retrieve_partner(token)
+        if not user:
+            raise werkzeug.exceptions.NotFound()
+        qcontext['email'] = user.email
+        qcontext['name'] = user.name
+        try:
+            if http.request.httprequest.method == 'POST':
+                values = { key: qcontext.get(key) for key in ('email', 'name', 'password') }
+                if not values:
+                    raise UserError(_("The form was not properly filled in."))
+                if values.get('password') != qcontext.get('confirm_password'):
+                    raise UserError(_("Passwords do not match; please retype them."))
+                user = http.request.env['mail_reset.users'].sudo()._reset_retrieve_partner(token)
+                if not user or (user and not user.reset_valid):
+                    raise werkzeug.exceptions.NotFound()
+                user.reset_mail_password(qcontext.get('password'))
+                qcontext['message'] = 'Your email password has been reset successfully!
+#                 time.sleep(5)
+#                 return werkzeug.utils.redirect(f'https://webmail.{user.domain.name}')
+        except UserError as e:
+            qcontext['error'] = e.name or e.value
+        except Exception as e:
+            qcontext['error'] = str(e)
+
+        response = http.request.render('mail_reset.reset_password', qcontext)
+        response.headers['X-Frame-Options'] = 'DENY'
+        return response
+            
 
     @http.route('/mail_reset/submit', methods=['POST'], type='http', auth='public', website=True, csrf=True)
     def reset_form_submit(self, **kw):
         email = kw.get('email')
         if self._email_registered(email):
             user = self._get_user(email)
-            user.reset_mail_password()
             return user.send_reset_email()[0]
 #             return f"Reset instructions has been sent to your recovery email"
         else:

@@ -47,8 +47,8 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
-    token = fields.Char(copy=False, groups="base.group_erp_manager")
-    reset_expiration = fields.Datetime(copy=False, groups="base.group_erp_manager")
+    token = fields.Char(copy=False)
+    reset_expiration = fields.Datetime(copy=False)
     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
     reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
 
@@ -61,13 +61,15 @@ class Mail_Reset_Users(models.Model):
         fragment = dict()
         if self.reset_valid:
             self.reset_prepare()
+        else:
+            return None
         if self.token:
             query['token'] = self.token
             self.reset_url = werkzeug.urls.url_join(base_url, "/mail_reset/%s?%s" % (route, werkzeug.urls.url_encode(query)))
 
     @api.multi
     def reset_cancel(self):
-        return self.write({'token': False, 'reset_expiration': False})
+        return self.write({'token': False, 'reset_expiration': False, 'url': False})
 
     @api.multi
     def reset_prepare(self):
@@ -94,7 +96,7 @@ class Mail_Reset_Users(models.Model):
         partner = self.search([('token', '=', token)], limit=1)
         if not partner:
             return False
-        if  not partner.reset_valid:
+        if not partner.reset_valid:
             return False
         return partner
             
@@ -133,15 +135,13 @@ class Mail_Reset_Users(models.Model):
         return "Hello"
     
     @api.one
-    def reset_mail_password(self):
+    def reset_mail_password(self, password):
         api_url = self.domain.api_url
         api_token = self.domain.api_token
 
-        random_temp_password = _generate_password()
-        temp_pass_hashed = crypt.crypt(random_temp_password)
-        temp_pass = temp_pass_hashed.replace('$','\$')
+        password_hashed = crypt.crypt(password).replace('$','\$')
         username = self.email
-        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=temp_pass,username=username)
+        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
 
         configuration = _get_k8s_conf(api_url,api_token)
         v1 = client.CoreV1Api(client.ApiClient(configuration))
@@ -166,7 +166,7 @@ class Mail_Reset_Users(models.Model):
                       stdout=True, tty=False)
         
         print("Response: " + resp)
-        self.sudo().new_password = random_temp_password
+        self.sudo().new_password = password
         return self.new_password
             
     @api.one
