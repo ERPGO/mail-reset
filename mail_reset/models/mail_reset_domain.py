@@ -39,7 +39,7 @@ class Mail_Reset_Domain(models.Model):
         ('draft', 'Draft'),
         ('success', 'Successs'),
         ('fail', 'Fail'),
-        ], string='Status', readonly=True, copy=False, index=True, track_visibility='onchange', default='draft')
+        ], string='Status', copy=False, index=True, default='draft')
 
     def _check_api_rights(self, verb, resource):
         hed = {'Authorization': 'Bearer ' + self.api_token}
@@ -58,7 +58,7 @@ class Mail_Reset_Domain(models.Model):
         output = response.json()
         if output['status'] == 'Failure':
             self.write({'state': 'fail'})
-            raise Warning('You are NOT authorized!')
+            return False
         else:
             return output['status']['allowed']
     
@@ -72,10 +72,8 @@ class Mail_Reset_Domain(models.Model):
             ]
         for verb, resource in A:
             if self._check_api_rights(verb,resource) == False:
-                self.write({'state': 'fail'})
-                raise Warning('You are NOT authorized!')
-        self.write({'state': 'success'})
-        raise Warning('You are authorized!')
+                return self.write({'state': 'fail'})
+        return self.write({'state': 'success'})
 
 
 
