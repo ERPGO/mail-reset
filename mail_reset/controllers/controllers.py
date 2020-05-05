@@ -5,11 +5,7 @@ import werkzeug
 import time
 
 class MailReset(http.Controller):
-    
-    @http.route('/test-url', type='http', auth='public', website=True, csrf=False)
-    def test_url(self, **kw):
-        return http.request.env['mail_reset.users'].say_hello()
-    
+        
     def _get_user(self, email):
         domain = email.split('@')[1]
         username = email.split('@')[0]
@@ -25,10 +21,10 @@ class MailReset(http.Controller):
         else:
             return False
     
-    @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
-    def reset_ask_form(self, **kw):
-        email = kw.get('email')
-        return http.request.render('mail_reset.some-id')
+#     @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
+#     def reset_ask_form(self, **kw):
+#         email = kw.get('email')
+#         return http.request.render('mail_reset.ask_form')
 
     @http.route('/mail_reset/reset_password', type='http', auth='public', website=True, sitemap=False)
     def reset_mail_password_form(self, **kw):
@@ -53,8 +49,7 @@ class MailReset(http.Controller):
                     raise werkzeug.exceptions.NotFound()
                 user.reset_mail_password(qcontext.get('password'))
                 qcontext['message'] = 'Your email password has been reset successfully!'
-#                 time.sleep(5)
-#                 return werkzeug.utils.redirect(f'https://webmail.{user.domain.name}')
+                return werkzeug.utils.redirect(f'https://webmail.{user.domain.name}')
         except UserError as e:
             qcontext['error'] = e.name or e.value
         except Exception as e:
@@ -65,25 +60,26 @@ class MailReset(http.Controller):
         return response
             
 
-    @http.route('/mail_reset/submit', methods=['POST'], type='http', auth='public', website=True, csrf=True)
+    @http.route('/mail_reset/submit', type='http', auth='public', website=True, csrf=True)
     def reset_form_submit(self, **kw):
-        email = kw.get('email')
-        if self._email_registered(email):
-            user = self._get_user(email)
-            return user.send_reset_email()[0]
-#             return f"Reset instructions has been sent to your recovery email"
-        else:
-            return f"{email} is not registered"
-            
-#     @http.route('/mail_reset/mail_reset/objects/', auth='public')
-#     def list(self, **kw):
-#         return http.request.render('mail_reset.listing', {
-#             'root': '/mail_reset/mail_reset',
-#             'objects': http.request.env['mail_reset.mail_reset'].search([]),
-#         })
+        qcontext = http.request.params.copy()
+        try:
+            if http.request.httprequest.method == 'POST':
+                email = qcontext.get('email')
+                if not email:
+                    raise UserError(_("The form was not properly filled in."))
+                if not self._email_registered(email):
+                    raise UserError(_(f"{email} is not registered!"))
+                user = self._get_user(email)
+                user.reset_prepare()
+                if not user.send_reset_email():
+                    raise UserError(_("Something went wrong!"))
+                qcontext['message'] = 'Reset instructions has been sent to your recovery email address!'
+        except UserError as e:
+            qcontext['error'] = e.name or e.value
+        except Exception as e:
+            qcontext['error'] = str(e)
 
-#     @http.route('/mail_reset/mail_reset/objects/<model("mail_reset.mail_reset"):obj>/', auth='public')
-#     def object(self, obj, **kw):
-#         return http.request.render('mail_reset.object', {
-#             'object': obj
-#         })
+        response = http.request.render('mail_reset.ask_form', qcontext)
+        response.headers['X-Frame-Options'] = 'DENY'
+        return response

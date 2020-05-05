@@ -47,6 +47,13 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
+    name = fields.Char(string="Full Name")
+    active = fields.Boolean(string="Active", default=True)
+    username = fields.Char(string="Username")
+    domain = fields.Many2one('mail_reset.domain', string="Domain")
+    recovery_email = fields.Char(string="Recovery email")
+    email = fields.Char(string='Email', compute="_set_email", readonly=True)
+#     new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
     token = fields.Char(copy=False)
     reset_expiration = fields.Datetime(copy=False)
     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
@@ -99,16 +106,7 @@ class Mail_Reset_Users(models.Model):
         if not partner.reset_valid:
             return False
         return partner
-            
-            
-    name = fields.Char(string="Full Name")
-    active = fields.Boolean(string="Active", default=True)
-    username = fields.Char(string="Username")
-    domain = fields.Many2one('mail_reset.domain', string="Domain")
-    recovery_email = fields.Char(string="Recovery email")
-    email = fields.Char(string='Email', compute="_set_email", readonly=True)
-    new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
-    
+                
     @api.depends('domain','username')
     def _set_email(self):
         if self.domain and self.username:
@@ -165,15 +163,14 @@ class Mail_Reset_Users(models.Model):
                       stderr=True, stdin=False,
                       stdout=True, tty=False)
         
-        print("Response: " + resp)
-        self.sudo().new_password = password
-        return self.new_password
+        return "Response: " + resp
             
     @api.one
     def send_reset_email(self):
+        self._compute_reset_url()
         template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
         if template.sudo().send_mail(self.id,force_send=True):
-            return "Reset mail has been sent to recovery email address!!!"
+            return True
         else:
-            return "Something went wrong!!!"
+            return False
         
