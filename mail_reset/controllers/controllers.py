@@ -52,7 +52,7 @@ class MailReset(http.Controller):
                 if not user or (user and not user.reset_valid):
                     raise werkzeug.exceptions.NotFound()
                 user.reset_mail_password(qcontext.get('password'))
-                qcontext['message'] = 'Your email password has been reset successfully!
+                qcontext['message'] = 'Your email password has been reset successfully!'
 #                 time.sleep(5)
 #                 return werkzeug.utils.redirect(f'https://webmail.{user.domain.name}')
         except UserError as e:
