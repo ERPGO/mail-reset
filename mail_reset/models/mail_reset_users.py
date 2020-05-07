@@ -2,6 +2,9 @@
 
 from odoo import models, exceptions, fields, api, _
 from odoo.tools import pycompat
+from odoo.exceptions import Warning
+
+import werkzeug.urls
 
 from datetime import datetime, timedelta
 import crypt
@@ -44,15 +47,36 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
-    token = fields.Char(copy=False, groups="base.group_erp_manager")
-    reset_expiration = fields.Datetime(copy=False, groups="base.group_erp_manager")
-    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid')
-#     reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
+    name = fields.Char(string="Full Name")
+    active = fields.Boolean(string="Active", default=True)
+    username = fields.Char(string="Username")
+    domain = fields.Many2one('mail_reset.domain', string="Domain")
+    recovery_email = fields.Char(string="Recovery email")
+    email = fields.Char(string='Email', compute="_set_email", readonly=True)
+#     new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
+    token = fields.Char(copy=False)
+    reset_expiration = fields.Datetime(copy=False)
+    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
+    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
 
-    
+
+    @api.one
+    def _compute_reset_url(self):
+        base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
+        query = dict()
+        route = 'reset_password'
+        fragment = dict()
+        if self.reset_valid:
+            self.reset_prepare()
+        else:
+            return None
+        if self.token:
+            query['token'] = self.token
+            self.reset_url = werkzeug.urls.url_join(base_url, "/mail_reset/%s?%s" % (route, werkzeug.urls.url_encode(query)))
+
     @api.multi
     def reset_cancel(self):
-        return self.write({'token': False, 'reset_expiration': False})
+        return self.write({'token': False, 'reset_expiration': False, 'url': False})
 
     @api.multi
     def reset_prepare(self):
@@ -79,19 +103,10 @@ class Mail_Reset_Users(models.Model):
         partner = self.search([('token', '=', token)], limit=1)
         if not partner:
             return False
-        if  not partner.reset_valid:
+        if not partner.reset_valid:
             return False
         return partner
-            
-            
-    name = fields.Char(string="Full Name")
-    active = fields.Boolean(string="Active", default=True)
-    username = fields.Char(string="Username")
-    domain = fields.Many2one('mail_reset.domain', string="Domain")
-    recovery_email = fields.Char(string="Recovery email")
-    email = fields.Char(string='Email', compute="_set_email", readonly=True)
-    new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
-    
+                
     @api.depends('domain','username')
     def _set_email(self):
         if self.domain and self.username:
@@ -118,15 +133,13 @@ class Mail_Reset_Users(models.Model):
         return "Hello"
     
     @api.one
-    def reset_mail_password(self):
+    def reset_mail_password(self, password):
         api_url = self.domain.api_url
         api_token = self.domain.api_token
 
-        random_temp_password = _generate_password()
-        temp_pass_hashed = crypt.crypt(random_temp_password)
-        temp_pass = temp_pass_hashed.replace('$','\$')
+        password_hashed = crypt.crypt(password).replace('$','\$')
         username = self.email
-        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=temp_pass,username=username)
+        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
 
         configuration = _get_k8s_conf(api_url,api_token)
         v1 = client.CoreV1Api(client.ApiClient(configuration))
@@ -150,15 +163,14 @@ class Mail_Reset_Users(models.Model):
                       stderr=True, stdin=False,
                       stdout=True, tty=False)
         
-        print("Response: " + resp)
-        self.sudo().new_password = random_temp_password
-        return self.new_password
+        return "Response: " + resp
             
     @api.one
     def send_reset_email(self):
+        self._compute_reset_url()
         template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
         if template.sudo().send_mail(self.id,force_send=True):
-            return "Reset mail has been sent to recovery email address!!!"
+            return True
         else:
-            return "Something went wrong!!!"
+            return False
         
