@@ -47,17 +47,16 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
-    name = fields.Char(string="Full Name")
+    name = fields.Char(string="Full Name", required=True)
     active = fields.Boolean(string="Active", default=True)
-    username = fields.Char(string="Username")
-    domain = fields.Many2one('mail_reset.domain', string="Domain")
-    recovery_email = fields.Char(string="Recovery email")
+    username = fields.Char(string="Username", required=True)
+    domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
+    recovery_email = fields.Char(string="Recovery email", required=True)
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
-#     new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
     token = fields.Char(copy=False)
-    reset_expiration = fields.Datetime(copy=False)
-    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
-    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
+    reset_expiration = fields.Datetime(copy=False, readonly=True)
+    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False, readonly=True)
+    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL', readonly=True)
 
 
     @api.one

@@ -30,9 +30,6 @@
 </div>
 <div style="padding:0px;width:600px;margin:auto; margin-top: 10px; background: #fff repeat top /100%;color:#777777">
     ${user.signature | safe}
-    <p style="font-size: 11px; margin-top: 10px;">
-        <strong>Sent by ${user.company_id.name} using <a href="www.odoo.com" style="text-decoration:none; color: #875A7B;">Odoo</a></strong>
-    </p>
         <strong style="font-weight:bold;">Sent by Erpgo Mail Service
 </strong></p></div>
 ]]></field>
