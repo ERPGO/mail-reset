@@ -127,7 +127,7 @@ class Mail_Reset_Users(models.Model):
         pod_list = _get_pods(api_url, api_token, label)
         for item in pod_list.items:
             if 'mariadb' in item.metadata.name:
-                return item.metadata.name 
+                return item.metadata.name
 
     def say_hello(self):
         return "Hello"
