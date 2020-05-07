@@ -31,15 +31,15 @@ class Mail_Reset_Domain(models.Model):
     _name = 'mail_reset.domain'
     _description = 'Mail Domain'
 
-    name = fields.Char(string="Domain name")
+    name = fields.Char(string="Domain name", required=True)
     contact = fields.Many2one('res.partner', string="Contact")
-    api_url = fields.Char(string="API URL")
-    api_token = fields.Char(string="API Token")
+    api_url = fields.Char(string="API URL", required=True)
+    api_token = fields.Char(string="API Token", required=True)
     state = fields.Selection([
         ('draft', 'Draft'),
         ('success', 'Successs'),
         ('fail', 'Fail'),
-        ], string='Status', copy=False, index=True, default='draft')
+        ], string='Status', copy=False, index=True, default='draft', readonly=True)
 
     def _check_api_rights(self, verb, resource):
         hed = {'Authorization': 'Bearer ' + self.api_token}

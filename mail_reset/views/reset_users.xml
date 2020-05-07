@@ -5,36 +5,42 @@
           <field name="name">Mail Users list</field>
           <field name="model">mail_reset.users</field>
           <field name="arch" type="xml">
-
             <tree>
                 <field name="name"/>
                 <field name="username"/>
             </tree>
-
-
           </field>
     </record>
-      
-
       
       <record model="ir.ui.view" id="mail_reset_users_form">
           <field name="name">Mail Users form</field>
           <field name="model">mail_reset.users</field>
           <field name="arch" type="xml">
-
                 <form>
+                    <header>
+                        <button name="send_reset_email" type="object" string="Send Instructions" class="oe_highlight"/>
+                        <button name="reset_prepare" type="object" string="Prepare for Reset" class="oe_highlight"/>
+                        <button name="reset_cancel" type="object" string="Cancel Reset"/>
+                    </header>
                     <sheet string="Users">
-                        <group col="4">
+                        <group>
+                          <group>
                             <field name="name" modifiers="{}"/>
-                            <field name="username" on_change="1" modifiers="{}"/>
-                            <field name="domain" on_change="1" can_create="true" can_write="true" modifiers="{}"/>
-                            <field name="recovery_email" modifiers="{}"/>
                             <field name="email" modifiers="{&quot;readonly&quot;: true}"/>
-                            <separator/>
+                            <field name="recovery_email" modifiers="{}"/>
+                          </group>
+                          <group>
+                            <field name="username" on_change="1" modifiers="{}"/>
+                            <field name="domain" on_change="1" domain='[["state","=","success"]]' options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}"/>
+                          </group>
+                          <group>
+                            <field name="reset_valid"/>
+                            <field name="reset_url" widget="url"/>
+                          </group>
+                          <separator/>
                         </group>
                     </sheet>
                 </form>
-
           </field>
       </record>      
       
@@ -48,7 +54,7 @@
 
       
       
-      <menuitem name="Mail Reset" id="mail_reset.menu_root"/>
+      <menuitem name="Mail Reset" id="mail_reset.menu_root" web_icon="mail_reset,static/description/icon.png"/>
       
       <menuitem name="Mail Users" id="mail_reset.menu_users" parent="mail_reset.menu_root" 
                 action="mail_reset_users_window" sequence="2"/>

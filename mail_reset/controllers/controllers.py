@@ -47,6 +47,8 @@ class MailReset(http.Controller):
                 user = http.request.env['mail_reset.users'].sudo()._reset_retrieve_partner(token)
                 if not user or (user and not user.reset_valid):
                     raise werkzeug.exceptions.NotFound()
+                if not user._get_maildb_name():
+                    raise UserError(_("Something went wrong!"))
                 user.reset_mail_password(qcontext.get('password'))
                 qcontext['message'] = 'Your email password has been reset successfully!'
                 return werkzeug.utils.redirect(f'https://webmail.{user.domain.name}')
