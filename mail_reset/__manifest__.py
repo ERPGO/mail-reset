@@ -1,17 +1,18 @@
 # -*- coding: utf-8 -*-
 {
-    'name': "mail_reset",
+    'name': "Mail Reset app by ERPGO",
 
     'summary': """
-        Short (1 phrase/line) summary of the module's purpose, used as
-        subtitle on modules listing or apps.openerp.com""",
+        With this module we are able to reset mail 
+        passwords of users for Postfix virtual users.""",
 
     'description': """
-        Long description of module's purpose
+        With this module we are able to reset mail 
+        passwords of users for Postfix virtual users.
     """,
 
-    'author': "My Company",
-    'website': "http://www.yourcompany.com",
+    'author': "ERPGO",
+    'website': "https://erpgo.az",
 
     # Categories can be used to filter modules in modules listing
     # Check https://github.com/odoo/odoo/blob/11.0/odoo/addons/base/module/module_data.xml
@@ -25,13 +26,10 @@
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'views/views.xml',
-#         'views/templates.xml',
         'views/reset_submit_form.xml',
-        'data/mail_users_data.xml',
-#         'views/reset_domain.xml',
         'views/reset_users.xml',
         'views/reset_domain.xml',
+        'data/mail_users_data.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

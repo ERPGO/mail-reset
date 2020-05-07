@@ -47,17 +47,16 @@ class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
 
-    name = fields.Char(string="Full Name")
+    name = fields.Char(string="Full Name", required=True)
     active = fields.Boolean(string="Active", default=True)
-    username = fields.Char(string="Username")
-    domain = fields.Many2one('mail_reset.domain', string="Domain")
-    recovery_email = fields.Char(string="Recovery email")
+    username = fields.Char(string="Username", required=True)
+    domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
+    recovery_email = fields.Char(string="Recovery email", required=True)
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
-#     new_password = fields.Char(string="New password", default=False, readonly=True, invisible=True)
     token = fields.Char(copy=False)
-    reset_expiration = fields.Datetime(copy=False)
-    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False)
-    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL')
+    reset_expiration = fields.Datetime(copy=False, readonly=True)
+    reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False, readonly=True)
+    reset_url = fields.Char(string='Reset URL', readonly=True)
 
 
     @api.one
@@ -76,7 +75,7 @@ class Mail_Reset_Users(models.Model):
 
     @api.multi
     def reset_cancel(self):
-        return self.write({'token': False, 'reset_expiration': False, 'url': False})
+        return self.write({'token': False, 'reset_expiration': False, 'reset_url': False})
 
     @api.multi
     def reset_prepare(self):
@@ -127,10 +126,8 @@ class Mail_Reset_Users(models.Model):
         pod_list = _get_pods(api_url, api_token, label)
         for item in pod_list.items:
             if 'mariadb' in item.metadata.name:
-                return item.metadata.name 
-
-    def say_hello(self):
-        return "Hello"
+                return item.metadata.name
+        return False
     
     @api.one
     def reset_mail_password(self, password):
@@ -167,6 +164,8 @@ class Mail_Reset_Users(models.Model):
             
     @api.one
     def send_reset_email(self):
+        if not self.reset_valid:
+            raise Warning(_('Reset is not valid for this user!'))
         self._compute_reset_url()
         template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
         if template.sudo().send_mail(self.id,force_send=True):
