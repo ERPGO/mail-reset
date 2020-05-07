@@ -27,8 +27,8 @@
     'data': [
         'security/ir.model.access.csv',
         'views/reset_submit_form.xml',
-        'views/reset_domain.xml',
         'views/reset_users.xml',
+        'views/reset_domain.xml',
         'data/mail_users_data.xml',
     ],
     # only loaded in demonstration mode
