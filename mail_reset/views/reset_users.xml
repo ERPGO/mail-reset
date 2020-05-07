@@ -12,13 +12,16 @@
           </field>
     </record>
       
-
-      
       <record model="ir.ui.view" id="mail_reset_users_form">
           <field name="name">Mail Users form</field>
           <field name="model">mail_reset.users</field>
           <field name="arch" type="xml">
                 <form>
+                    <header>
+                        <button name="send_reset_email" type="object" string="Send Instructions" class="oe_highlight"/>
+                        <button name="reset_prepare" type="object" string="Prepare for Reset" class="oe_highlight"/>
+                        <button name="reset_cancel" type="object" string="Cancel Reset"/>
+                    </header>
                     <sheet string="Users">
                         <group>
                           <group>

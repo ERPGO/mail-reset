@@ -12,14 +12,10 @@
           </field>
     </record>
       
-
-      
-      
       <record model="ir.ui.view" id="mail_reset_domain_form">
           <field name="name">Mail Domain form</field>
           <field name="model">mail_reset.domain</field>
           <field name="arch" type="xml">
-
                 <form>
                     <header>
                         <button name="check_k8s_access_rights" type="object" string="API Rights" class="oe_highlight"/>

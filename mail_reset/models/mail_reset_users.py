@@ -56,7 +56,7 @@ class Mail_Reset_Users(models.Model):
     token = fields.Char(copy=False)
     reset_expiration = fields.Datetime(copy=False, readonly=True)
     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False, readonly=True)
-    reset_url = fields.Char(compute='_compute_reset_url', string='Reset URL', readonly=True)
+    reset_url = fields.Char(string='Reset URL', readonly=True)
 
 
     @api.one
@@ -75,7 +75,7 @@ class Mail_Reset_Users(models.Model):
 
     @api.multi
     def reset_cancel(self):
-        return self.write({'token': False, 'reset_expiration': False, 'url': False})
+        return self.write({'token': False, 'reset_expiration': False, 'reset_url': False})
 
     @api.multi
     def reset_prepare(self):
@@ -164,6 +164,8 @@ class Mail_Reset_Users(models.Model):
             
     @api.one
     def send_reset_email(self):
+        if not self.reset_valid:
+            raise Warning(_('Reset is not valid for this user!'))
         self._compute_reset_url()
         template = self.env['ir.model.data'].get_object('mail_reset','mail_users_reset_password')
         if template.sudo().send_mail(self.id,force_send=True):
