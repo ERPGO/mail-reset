@@ -21,11 +21,6 @@ class MailReset(http.Controller):
         else:
             return False
     
-#     @http.route('/mail_reset/ask', type='http', auth='public', website=True, csrf=False)
-#     def reset_ask_form(self, **kw):
-#         email = kw.get('email')
-#         return http.request.render('mail_reset.ask_form')
-
     @http.route('/mail_reset/reset_password', type='http', auth='public', website=True, sitemap=False)
     def reset_mail_password_form(self, **kw):
         qcontext = http.request.params.copy()
@@ -73,8 +68,8 @@ class MailReset(http.Controller):
                 if not self._email_registered(email):
                     raise UserError(_(f"{email} is not registered!"))
                 user = self._get_user(email)
-                user.reset_prepare()
-                if not user.send_reset_email():
+                user.sudo().reset_prepare()
+                if not user.sudo().send_reset_email():
                     raise UserError(_("Something went wrong!"))
                 qcontext['message'] = 'Reset instructions has been sent to your recovery email address!'
         except UserError as e:
