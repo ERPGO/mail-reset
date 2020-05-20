@@ -1,3 +1,5 @@
 id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
-access_mail_reset_mail_user,Mail Reset Users,model_mail_reset_users,,1,0,0,0
-access_mail_reset_domain,Mail Reset Domains,model_mail_reset_domain,,1,0,0,0
+access_mail_reset_mail_user,All,model_mail_reset_users,,1,0,0,0
+access_mail_reset_mail_admin,Admin,model_mail_reset_users,base.group_system,1,1,1,1
+access_mail_reset_domain,All,model_mail_reset_domain,,1,0,0,0
+access_mail_reset_domain_admin,Admin,model_mail_reset_domain,base.group_system,1,1,1,1

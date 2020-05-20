@@ -62,7 +62,6 @@ class Mail_Reset_Domain(models.Model):
         else:
             return output['status']['allowed']
     
-    @api.one    
     def check_k8s_access_rights(self):
         A = [('get','pods'),
              ('list','pods'),
