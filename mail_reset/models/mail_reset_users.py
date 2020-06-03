@@ -14,8 +14,7 @@ from kubernetes import client, config
 from kubernetes.stream import stream
 
 def now(**kwargs):
-    dt = datetime.now() + timedelta(**kwargs)
-    return fields.Datetime.to_string(dt)
+    return datetime.now() + timedelta(**kwargs)
 
 def random_token():
     # the token has an entropy of about 120 bits (6 bits/char * 20 chars)
@@ -51,15 +50,13 @@ class Mail_Reset_Users(models.Model):
     active = fields.Boolean(string="Active", default=True)
     username = fields.Char(string="Username", required=True)
     domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
-    recovery_email = fields.Char(string="Recovery email", required=True)
+    recovery_email = fields.Char(string="Recovery email", required=True, stored=True)
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
     token = fields.Char(copy=False)
     reset_expiration = fields.Datetime(copy=False, readonly=True)
     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False, readonly=True)
     reset_url = fields.Char(string='Reset URL', readonly=True)
 
-
-    @api.one
     def _compute_reset_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
         query = dict()
@@ -73,11 +70,9 @@ class Mail_Reset_Users(models.Model):
             query['token'] = self.token
             self.reset_url = werkzeug.urls.url_join(base_url, "/mail_reset/%s?%s" % (route, werkzeug.urls.url_encode(query)))
 
-    @api.multi
     def reset_cancel(self):
         return self.write({'token': False, 'reset_expiration': False, 'reset_url': False})
 
-    @api.multi
     def reset_prepare(self):
         expiration = datetime.now() + timedelta(hours=24)
         for partner in self:
@@ -88,13 +83,12 @@ class Mail_Reset_Users(models.Model):
                 partner.write({'token': token, 'reset_expiration': expiration})
         return True
 
-    @api.multi
     @api.depends('token', 'reset_expiration')
     def _compute_reset_valid(self):
         dt = now()
-        for partner, partner_sudo in pycompat.izip(self, self.sudo()):
+        for partner, partner_sudo in zip(self, self.sudo()):
             partner.reset_valid = bool(partner.token) and \
-            (not partner.reset_expiration or dt <= partner.reset_expiration)
+            (not partner_sudo.reset_expiration or dt <= partner_sudo.reset_expiration)
 
             
     @api.model
@@ -108,14 +102,18 @@ class Mail_Reset_Users(models.Model):
                 
     @api.depends('domain','username')
     def _set_email(self):
-        if self.domain and self.username:
-            email = f'{self.username}@{self.domain.name}'
-            self.email = email
+        for record in self:
+            if record.domain and record.username:
+                email = f'{record.username}@{record.domain.name}'
+                record.email = email
+            else:
+                record.email = ""
 
     @api.model
     def create(self, vals):
         res = super(Mail_Reset_Users, self).create(vals)
-        res._set_email()
+        for rec in self:
+            rec._set_email()
         return res
                 
     def _get_maildb_name(self):
@@ -129,7 +127,6 @@ class Mail_Reset_Users(models.Model):
                 return item.metadata.name
         return False
     
-    @api.one
     def reset_mail_password(self, password):
         api_url = self.domain.api_url
         api_token = self.domain.api_token
@@ -162,7 +159,6 @@ class Mail_Reset_Users(models.Model):
         
         return "Response: " + resp
             
-    @api.one
     def send_reset_email(self):
         if not self.reset_valid:
             raise Warning(_('Reset is not valid for this user!'))
