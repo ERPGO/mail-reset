@@ -179,7 +179,7 @@ class Mail_Reset_Users(models.Model):
         self._run_sql_on_maildb(sql)
         
     def _update_mail_user(self):
-        sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", quota="{quota}" WHERE username="{username};'.format(
+        sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", quota="{quota}" WHERE username="{username}";'.format(
             username=self.email,
             name=self.name,
             recovery_email=self.recovery_email,
@@ -216,7 +216,7 @@ class Mail_Reset_Users(models.Model):
             rec._remove_mail_user()
         super(Mail_Reset_Users, self).unlink()
         
-#     def write(self, vals):
-#         res = super(Mail_Reset_Users, self).write(vals)
-#         self._update_mail_user()
-#         return res
+    def write(self, vals):
+        res = super(Mail_Reset_Users, self).write(vals)
+        self._update_mail_user()
+        return res
