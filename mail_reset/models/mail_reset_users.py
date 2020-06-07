@@ -156,7 +156,7 @@ class Mail_Reset_Users(models.Model):
 
     def _create_mail_user(self):
         random_password = _generate_password()
-        sql = 'INSERT mailbox (name,username,email_other,password,maildir,local_part,domain) VALUES("{name}","{email}","{recovery_email}","{password}","{maildir}","{username}","{domain}");'.format(
+        sql = 'INSERT mailbox (name,username,email_other,password,maildir,local_part,domain) VALUES("{name}","{email}","{recovery_email}","{password}","{maildir}","{username}","{domain}");INSERT alias (address,goto,domain) VALUES("{email}","{email}","{domain}");'.format(
             name=self.name,
             email=self.email,
             password=random_password,
@@ -185,3 +185,8 @@ class Mail_Reset_Users(models.Model):
         else:
             return False
         
+    @api.model
+    def create(self, vals):
+        record = super(Mail_Reset_Users, self).create(vals)
+        record._create_mail_user()
+        return record
