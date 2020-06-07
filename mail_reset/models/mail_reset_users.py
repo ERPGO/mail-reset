@@ -42,6 +42,40 @@ def _get_pods(api_url, api_token, label):
     return pod_list
 
 
+def _get_maildb_name(api_url, api_token, label="app=mailserver", namespace="default"):
+    pod_list = _get_pods(api_url, api_token, label)
+    for item in pod_list.items:
+        if 'mariadb' in item.metadata.name:
+            return item.metadata.name
+    return False
+
+
+def _run_sql_on_maildb(api_url, api_token, namespace="default", sql):
+    configuration = _get_k8s_conf(api_url,api_token)
+    v1 = client.CoreV1Api(client.ApiClient(configuration))
+    sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
+    print(sql_command)
+    exec_command = [
+        '/bin/bash',
+        '-c',
+        sql_command,
+        ]
+
+    c = configuration
+    c.assert_hostname = False
+
+    name = _get_maildb_name(api_url, api_token)
+
+    resp = stream(v1.connect_get_namespaced_pod_exec,
+                  name,
+                  namespace,
+                  command=exec_command,
+                  stderr=True, stdin=False,
+                  stdout=True, tty=False)
+
+    return print(resp)
+
+
 class Mail_Reset_Users(models.Model):
     _name = 'mail_reset.users'
     _description = "Mail Users"
@@ -117,49 +151,50 @@ class Mail_Reset_Users(models.Model):
             rec._set_email()
         return res
                 
-    def _get_maildb_name(self):
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        label = "app=mailserver"
+#     def _get_maildb_name(self):
+#         api_url = self.domain.api_url
+#         api_token = self.domain.api_token
+#         label = "app=mailserver"
         
-        pod_list = _get_pods(api_url, api_token, label)
-        for item in pod_list.items:
-            if 'mariadb' in item.metadata.name:
-                return item.metadata.name
-        return False
+#         pod_list = _get_pods(api_url, api_token, label)
+#         for item in pod_list.items:
+#             if 'mariadb' in item.metadata.name:
+#                 return item.metadata.name
+#         return False
 
     def _calculate_quota_value(self):
         value = self.quota * 1024000
         return value
 
-    def _run_sql_on_maildb(self, sql):
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        configuration = _get_k8s_conf(api_url,api_token)
-        v1 = client.CoreV1Api(client.ApiClient(configuration))
-        sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
-        print(sql_command)
-        exec_command = [
-            '/bin/bash',
-            '-c',
-            sql_command,
-            ]
+#     def _run_sql_on_maildb(self, sql):
+#         api_url = self.domain.api_url
+#         api_token = self.domain.api_token
+#         configuration = _get_k8s_conf(api_url,api_token)
+#         v1 = client.CoreV1Api(client.ApiClient(configuration))
+#         sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
+#         print(sql_command)
+#         exec_command = [
+#             '/bin/bash',
+#             '-c',
+#             sql_command,
+#             ]
 
-        c = configuration
-        c.assert_hostname = False
+#         c = configuration
+#         c.assert_hostname = False
 
-        name = self._get_maildb_name()
+#         name = _get_maildb_name(api_url, api_token)
 
-        resp = stream(v1.connect_get_namespaced_pod_exec,
-                      name,
-                      'default',
-                      command=exec_command,
-                      stderr=True, stdin=False,
-                      stdout=True, tty=False)
+#         resp = stream(v1.connect_get_namespaced_pod_exec,
+#                       name,
+#                       'default',
+#                       command=exec_command,
+#                       stderr=True, stdin=False,
+#                       stdout=True, tty=False)
         
-        return print(resp)
+#         return print(resp)
 
     def _create_mail_user(self):
+        
         random_password = _generate_password()
         sql = 'INSERT mailbox (name,username,email_other,password,maildir,local_part,domain,quota) VALUES("{name}","{email}","{recovery_email}","{password}","{maildir}","{username}","{domain}","{quota}");INSERT alias (address,goto,domain) VALUES("{email}","{email}","{domain}");'.format(
             name=self.name,
@@ -171,12 +206,17 @@ class Mail_Reset_Users(models.Model):
             domain=self.domain.name,
             quota=self._calculate_quota_value()
         )
-        self._run_sql_on_maildb(sql)
+        
+        api_url = self.domain.api_url
+        api_token = self.domain.api_token
+        _run_sql_on_maildb(api_url, api_token, sql)
 
     def _remove_mail_user(self):
         sql = 'DELETE from mailbox WHERE username="{username}";DELETE from alias WHERE goto="{username}";'.format(username=self.email)
         
-        self._run_sql_on_maildb(sql)
+        api_url = self.domain.api_url
+        api_token = self.domain.api_token
+        _run_sql_on_maildb(api_url, api_token, sql)
         
     def _update_mail_user(self):
         sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", active={active}, quota="{quota}" WHERE username="{username}";'.format(
@@ -186,7 +226,9 @@ class Mail_Reset_Users(models.Model):
             quota=self._calculate_quota_value(),
             active=self.active
         )
-        self._run_sql_on_maildb(sql)
+        api_url = self.domain.api_url
+        api_token = self.domain.api_token
+        _run_sql_on_maildb(api_url, api_token, sql)
     
     def _pull_rebase(self):
         pass
@@ -197,7 +239,9 @@ class Mail_Reset_Users(models.Model):
         username = self.email
         sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
 
-        self._run_sql_on_maildb(sql)
+        api_url = self.domain.api_url
+        api_token = self.domain.api_token
+        _run_sql_on_maildb(api_url, api_token, sql)
 
     def send_reset_email(self):
         if not self.reset_valid:
@@ -222,3 +266,9 @@ class Mail_Reset_Users(models.Model):
         res = super(Mail_Reset_Users, self).write(vals)
         self._update_mail_user()
         return res
+
+class Mail_Reset_Aliases(models.Model):
+    _name = 'mail_reset.users'
+    _description = "Mail Users"
+
+    name = fields.Char(string="Full Name", required=True)

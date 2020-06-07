@@ -25,6 +25,8 @@
                           <group>
                             <field name="name"/>
                             <field name="contact"/>
+                            <field name="namespace"/>
+                            <field name="label"/>
                           </group>
                           <group>
                             <field name="api_url"/>
