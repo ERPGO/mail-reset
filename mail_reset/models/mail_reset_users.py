@@ -166,7 +166,13 @@ class Mail_Reset_Users(models.Model):
             domain=self.domain.name
         )
         self._run_sql_on_maildb(sql)
-    
+
+    def _remove_mail_user(self):
+        sql = 'DELETE from mailbox WHERE username="{username}";DELETE from alias WHERE goto="{username}";'.format(username=self.email)
+        
+        self._run_sql_on_maildb(sql)
+        
+        
     def reset_mail_password(self, password):
 
         password_hashed = crypt.crypt(password).replace('$','\$')
@@ -184,9 +190,14 @@ class Mail_Reset_Users(models.Model):
             return True
         else:
             return False
-        
+    
     @api.model
     def create(self, vals):
         record = super(Mail_Reset_Users, self).create(vals)
         record._create_mail_user()
         return record
+
+    def unlink(self):
+        for rec in self:
+            rec._remove_mail_user()
+        super(Mail_Reset_Users, self).unlink()
