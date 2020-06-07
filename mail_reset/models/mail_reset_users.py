@@ -3,7 +3,7 @@
 from odoo import models, exceptions, fields, api, _
 from odoo.tools import pycompat
 from odoo.exceptions import Warning
-
+import pprint
 import werkzeug.urls
 
 from datetime import datetime, timedelta
@@ -157,7 +157,7 @@ class Mail_Reset_Users(models.Model):
                       stderr=True, stdin=False,
                       stdout=True, tty=False)
         
-        return "Response: " + resp
+        return print(resp)
 
     def _create_mail_user(self):
         random_password = _generate_password()
@@ -179,14 +179,18 @@ class Mail_Reset_Users(models.Model):
         self._run_sql_on_maildb(sql)
         
     def _update_mail_user(self):
-        sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", quota="{quota}" WHERE username="{username}";'.format(
+        sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", active={active}, quota="{quota}" WHERE username="{username}";'.format(
             username=self.email,
             name=self.name,
             recovery_email=self.recovery_email,
-            quota=self._calculate_quota_value()
+            quota=self._calculate_quota_value(),
+            active=self.active
         )
         self._run_sql_on_maildb(sql)
-        
+    
+    def _pull_rebase(self):
+        pass
+
     def reset_mail_password(self, password):
 
         password_hashed = crypt.crypt(password).replace('$','\$')
@@ -212,9 +216,7 @@ class Mail_Reset_Users(models.Model):
         return record
 
     def unlink(self):
-        for rec in self:
-            rec._remove_mail_user()
-        super(Mail_Reset_Users, self).unlink()
+        raise Warning('Cannot remove mail user! Please instead archive the record')
         
     def write(self, vals):
         res = super(Mail_Reset_Users, self).write(vals)

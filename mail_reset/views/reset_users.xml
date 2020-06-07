@@ -25,6 +25,7 @@
                     <sheet string="Users">
                         <group>
                           <group>
+                            <field name="active"/>
                             <field name="name" modifiers="{}"/>
                             <field name="email" modifiers="{&quot;readonly&quot;: true}"/>
                             <field name="recovery_email" modifiers="{}"/>
