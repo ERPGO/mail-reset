@@ -127,14 +127,9 @@ class Mail_Reset_Users(models.Model):
                 return item.metadata.name
         return False
     
-    def reset_mail_password(self, password):
+    def _run_sql_on_maildb(self, sql):
         api_url = self.domain.api_url
         api_token = self.domain.api_token
-
-        password_hashed = crypt.crypt(password).replace('$','\$')
-        username = self.email
-        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
-
         configuration = _get_k8s_conf(api_url,api_token)
         v1 = client.CoreV1Api(client.ApiClient(configuration))
         sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
@@ -158,7 +153,28 @@ class Mail_Reset_Users(models.Model):
                       stdout=True, tty=False)
         
         return "Response: " + resp
-            
+
+    def _create_mail_user(self):
+        random_password = _generate_password()
+        sql = 'INSERT mailbox (name,username,email_other,password,maildir,local_part,domain) VALUES("{name}","{email}","{recovery_email}","{password}","{maildir}","{username}","{domain}");'.format(
+            name=self.name,
+            email=self.email,
+            password=random_password,
+            recovery_email=self.recovery_email,
+            username=self.username,
+            maildir=f'{self.domain.name}/{self.username}/',
+            domain=self.domain.name
+        )
+        self._run_sql_on_maildb(sql)
+    
+    def reset_mail_password(self, password):
+
+        password_hashed = crypt.crypt(password).replace('$','\$')
+        username = self.email
+        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
+
+        self._run_sql_on_maildb(sql)
+
     def send_reset_email(self):
         if not self.reset_valid:
             raise Warning(_('Reset is not valid for this user!'))
