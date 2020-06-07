@@ -51,6 +51,7 @@ class Mail_Reset_Users(models.Model):
     username = fields.Char(string="Username", required=True)
     domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
     recovery_email = fields.Char(string="Recovery email", required=True, stored=True)
+    quota = fields.Integer(string="Quota (Mb):")
     email = fields.Char(string='Email', compute="_set_email", readonly=True)
     token = fields.Char(copy=False)
     reset_expiration = fields.Datetime(copy=False, readonly=True)
@@ -126,15 +127,14 @@ class Mail_Reset_Users(models.Model):
             if 'mariadb' in item.metadata.name:
                 return item.metadata.name
         return False
-    
-    def reset_mail_password(self, password):
+
+    def _calculate_quota_value(self):
+        value = self.quota * 1024000
+        return value
+
+    def _run_sql_on_maildb(self, sql):
         api_url = self.domain.api_url
         api_token = self.domain.api_token
-
-        password_hashed = crypt.crypt(password).replace('$','\$')
-        username = self.email
-        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
-
         configuration = _get_k8s_conf(api_url,api_token)
         v1 = client.CoreV1Api(client.ApiClient(configuration))
         sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
@@ -158,7 +158,43 @@ class Mail_Reset_Users(models.Model):
                       stdout=True, tty=False)
         
         return "Response: " + resp
-            
+
+    def _create_mail_user(self):
+        random_password = _generate_password()
+        sql = 'INSERT mailbox (name,username,email_other,password,maildir,local_part,domain,quota) VALUES("{name}","{email}","{recovery_email}","{password}","{maildir}","{username}","{domain}","{quota}");INSERT alias (address,goto,domain) VALUES("{email}","{email}","{domain}");'.format(
+            name=self.name,
+            email=self.email,
+            password=random_password,
+            recovery_email=self.recovery_email,
+            username=self.username,
+            maildir=f'{self.domain.name}/{self.username}/',
+            domain=self.domain.name,
+            quota=self._calculate_quota_value()
+        )
+        self._run_sql_on_maildb(sql)
+
+    def _remove_mail_user(self):
+        sql = 'DELETE from mailbox WHERE username="{username}";DELETE from alias WHERE goto="{username}";'.format(username=self.email)
+        
+        self._run_sql_on_maildb(sql)
+        
+    def _update_mail_user(self):
+        sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", quota="{quota}" WHERE username="{username}";'.format(
+            username=self.email,
+            name=self.name,
+            recovery_email=self.recovery_email,
+            quota=self._calculate_quota_value()
+        )
+        self._run_sql_on_maildb(sql)
+        
+    def reset_mail_password(self, password):
+
+        password_hashed = crypt.crypt(password).replace('$','\$')
+        username = self.email
+        sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
+
+        self._run_sql_on_maildb(sql)
+
     def send_reset_email(self):
         if not self.reset_valid:
             raise Warning(_('Reset is not valid for this user!'))
@@ -168,4 +204,19 @@ class Mail_Reset_Users(models.Model):
             return True
         else:
             return False
+    
+    @api.model
+    def create(self, vals):
+        record = super(Mail_Reset_Users, self).create(vals)
+        record._create_mail_user()
+        return record
+
+    def unlink(self):
+        for rec in self:
+            rec._remove_mail_user()
+        super(Mail_Reset_Users, self).unlink()
         
+    def write(self, vals):
+        res = super(Mail_Reset_Users, self).write(vals)
+        self._update_mail_user()
+        return res
