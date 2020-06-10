@@ -2,9 +2,10 @@
 
 from odoo import models, exceptions, fields, api, _
 from odoo.tools import pycompat
-from odoo.exceptions import Warning
+from odoo.exceptions import Warning, ValidationError
 import pprint
 import werkzeug.urls
+import re 
 
 from datetime import datetime, timedelta
 import crypt
@@ -27,6 +28,23 @@ def _generate_password():
     p =  "".join(random.sample(s,passlen ))
     return p
 
+def _email_is_valid(email): 
+    regex = '^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,3}$'
+    if re.search(regex, email):
+        return True
+    else:
+        return False
+
+def _newline_to_comma(string):
+    return string.replace("\n", ",").strip()
+
+def _is_username(username):
+    regex = '[@]'
+    if re.search(regex, username):
+        return True
+    else:
+        return False
+    
 def _get_k8s_conf(api_url, api_token):
     configuration = client.Configuration()
     configuration.api_key["authorization"] = api_token
@@ -50,7 +68,7 @@ def _get_maildb_name(api_url, api_token, label="app=mailserver", namespace="defa
     return False
 
 
-def _run_sql_on_maildb(api_url, api_token, namespace="default", sql):
+def _run_sql_on_maildb(api_url, api_token, sql, namespace="default"):
     configuration = _get_k8s_conf(api_url,api_token)
     v1 = client.CoreV1Api(client.ApiClient(configuration))
     sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
@@ -82,7 +100,6 @@ class Mail_Reset_Users(models.Model):
 
     name = fields.Char(string="Full Name", required=True)
     active = fields.Boolean(string="Active", default=True)
-    username = fields.Char(string="Username", required=True)
     domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
     recovery_email = fields.Char(string="Recovery email", required=True, stored=True)
     quota = fields.Integer(string="Quota (Mb):")
@@ -91,6 +108,9 @@ class Mail_Reset_Users(models.Model):
     reset_expiration = fields.Datetime(copy=False, readonly=True)
     reset_valid = fields.Boolean(compute='_compute_reset_valid', string='Reset Token is Valid', default=False, readonly=True)
     reset_url = fields.Char(string='Reset URL', readonly=True)
+    username = fields.Char(string="Username", copy=False, required=True)
+    
+#     _sql_constraints = [ ('email_unique','UNIQUE(email)','Email must be unique') ]
 
     def _compute_reset_url(self):
         base_url = self.env['ir.config_parameter'].sudo().get_param('web.base.url')
@@ -151,47 +171,10 @@ class Mail_Reset_Users(models.Model):
             rec._set_email()
         return res
                 
-#     def _get_maildb_name(self):
-#         api_url = self.domain.api_url
-#         api_token = self.domain.api_token
-#         label = "app=mailserver"
-        
-#         pod_list = _get_pods(api_url, api_token, label)
-#         for item in pod_list.items:
-#             if 'mariadb' in item.metadata.name:
-#                 return item.metadata.name
-#         return False
 
     def _calculate_quota_value(self):
         value = self.quota * 1024000
         return value
-
-#     def _run_sql_on_maildb(self, sql):
-#         api_url = self.domain.api_url
-#         api_token = self.domain.api_token
-#         configuration = _get_k8s_conf(api_url,api_token)
-#         v1 = client.CoreV1Api(client.ApiClient(configuration))
-#         sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
-#         print(sql_command)
-#         exec_command = [
-#             '/bin/bash',
-#             '-c',
-#             sql_command,
-#             ]
-
-#         c = configuration
-#         c.assert_hostname = False
-
-#         name = _get_maildb_name(api_url, api_token)
-
-#         resp = stream(v1.connect_get_namespaced_pod_exec,
-#                       name,
-#                       'default',
-#                       command=exec_command,
-#                       stderr=True, stdin=False,
-#                       stdout=True, tty=False)
-        
-#         return print(resp)
 
     def _create_mail_user(self):
         
@@ -207,16 +190,12 @@ class Mail_Reset_Users(models.Model):
             quota=self._calculate_quota_value()
         )
         
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        _run_sql_on_maildb(api_url, api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
 
     def _remove_mail_user(self):
         sql = 'DELETE from mailbox WHERE username="{username}";DELETE from alias WHERE goto="{username}";'.format(username=self.email)
         
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        _run_sql_on_maildb(api_url, api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
         
     def _update_mail_user(self):
         sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", active={active}, quota="{quota}" WHERE username="{username}";'.format(
@@ -226,9 +205,8 @@ class Mail_Reset_Users(models.Model):
             quota=self._calculate_quota_value(),
             active=self.active
         )
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        _run_sql_on_maildb(api_url, api_token, sql)
+        
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
     
     def _pull_rebase(self):
         pass
@@ -239,9 +217,7 @@ class Mail_Reset_Users(models.Model):
         username = self.email
         sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
 
-        api_url = self.domain.api_url
-        api_token = self.domain.api_token
-        _run_sql_on_maildb(api_url, api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
 
     def send_reset_email(self):
         if not self.reset_valid:
@@ -268,7 +244,44 @@ class Mail_Reset_Users(models.Model):
         return res
 
 class Mail_Reset_Aliases(models.Model):
-    _name = 'mail_reset.users'
-    _description = "Mail Users"
+    _name = 'mail_reset.aliases'
+    _description = "Mail Aliases"
+    
+    active = fields.Boolean(string="Active", default=True)
+    goto = fields.Text(string="Forward to:", required=True)
+    domain = fields.Many2one('mail_reset.domain', string="Domain", required=True)
+    name = fields.Char(string="Address", required=True)
 
-    name = fields.Char(string="Full Name", required=True)
+    def _create_user_alias(self):
+        sql = 'INSERT alias (address,goto,domain) VALUES("{address}","{goto}","{domain}");'.format(
+            address=f'{self.name}@{self.domain.name}',
+            goto=_newline_to_comma(self.goto),
+            domain=self.domain.name
+        )
+        
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+
+    def _update_user_alias(self):
+        sql = 'UPDATE alias SET goto="{goto}", active={active} WHERE address="{address}";'.format(
+            address=f'{self.name}@{self.domain.name}',
+            goto=_newline_to_comma(self.goto),
+            active=self.active
+        )
+
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+
+    @api.constrains('name')
+    def _check_address(self):
+        if _is_username(self.name):
+            raise Warning('Address is invalid!')
+        
+    @api.model
+    def create(self, vals):
+        record = super(Mail_Reset_Aliases, self).create(vals)
+        record._create_user_alias()
+        return record
+
+    def write(self, vals):
+        res = super(Mail_Reset_Aliases, self).write(vals)
+        self._update_user_alias()
+        return res

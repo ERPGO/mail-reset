@@ -3,3 +3,5 @@ access_mail_reset_mail_user,All,model_mail_reset_users,,1,0,0,0
 access_mail_reset_mail_admin,Admin,model_mail_reset_users,base.group_system,1,1,1,1
 access_mail_reset_domain,All,model_mail_reset_domain,,1,0,0,0
 access_mail_reset_domain_admin,Admin,model_mail_reset_domain,base.group_system,1,1,1,1
+access_mail_reset_aliases_admin,Admin,model_mail_reset_aliases,base.group_system,1,1,1,1
+access_mail_reset_aliases,All,model_mail_reset_aliases,,1,0,0,0

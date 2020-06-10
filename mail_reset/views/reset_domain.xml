@@ -49,9 +49,7 @@
       
       
       <menuitem name="Mail Domain" id="mail_reset.menu_domain" parent="mail_reset.menu_root" 
-                action="mail_reset_domain_window" groups="base.group_system" sequence="3"/>
-      
-      
+                action="mail_reset_domain_window" groups="base.group_no_one" sequence="3"/>
       
   </data>
 </odoo>
