@@ -53,22 +53,22 @@ def _get_k8s_conf(api_url, api_token):
     configuration.verify_ssl = False
     return configuration
 
-def _get_pods(api_url, api_token, label):  
+def _get_pods(api_url, api_token, namespace, label):
     configuration = _get_k8s_conf(api_url,api_token)
     v1 = client.CoreV1Api(client.ApiClient(configuration))
-    pod_list = v1.list_namespaced_pod("default", pretty=False, label_selector=label)
+    pod_list = v1.list_namespaced_pod(namespace, pretty=False, label_selector=label)
     return pod_list
 
 
-def _get_maildb_name(api_url, api_token, label="app=mailserver", namespace="default"):
-    pod_list = _get_pods(api_url, api_token, label)
+def _get_maildb_name(api_url, api_token, namespace, label):
+    pod_list = _get_pods(api_url, api_token, namespace, label)
     for item in pod_list.items:
         if 'mariadb' in item.metadata.name:
             return item.metadata.name
     return False
 
 
-def _run_sql_on_maildb(api_url, api_token, sql, namespace="default"):
+def _run_sql_on_maildb(api_url, api_token, namespace, label, sql):
     configuration = _get_k8s_conf(api_url,api_token)
     v1 = client.CoreV1Api(client.ApiClient(configuration))
     sql_command = f"mysql -u postfix -p$MYSQL_PASSWORD -D postfix -e '{sql}'"
@@ -82,7 +82,7 @@ def _run_sql_on_maildb(api_url, api_token, sql, namespace="default"):
     c = configuration
     c.assert_hostname = False
 
-    name = _get_maildb_name(api_url, api_token)
+    name = _get_maildb_name(api_url, api_token, namespace, label)
 
     resp = stream(v1.connect_get_namespaced_pod_exec,
                   name,
@@ -190,12 +190,12 @@ class Mail_Reset_Users(models.Model):
             quota=self._calculate_quota_value()
         )
         
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
 
     def _remove_mail_user(self):
         sql = 'DELETE from mailbox WHERE username="{username}";DELETE from alias WHERE goto="{username}";'.format(username=self.email)
         
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
         
     def _update_mail_user(self):
         sql = 'UPDATE mailbox SET name="{name}", email_other="{recovery_email}", active={active}, quota="{quota}" WHERE username="{username}";'.format(
@@ -206,7 +206,7 @@ class Mail_Reset_Users(models.Model):
             active=self.active
         )
         
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
     
     def _pull_rebase(self):
         pass
@@ -217,7 +217,7 @@ class Mail_Reset_Users(models.Model):
         username = self.email
         sql = 'UPDATE mailbox SET password="{password}" WHERE username="{username}";'.format(password=password_hashed,username=username)
 
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
 
     def send_reset_email(self):
         if not self.reset_valid:
@@ -259,7 +259,7 @@ class Mail_Reset_Aliases(models.Model):
             domain=self.domain.name
         )
         
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
 
     def _update_user_alias(self):
         sql = 'UPDATE alias SET goto="{goto}", active={active} WHERE address="{address}";'.format(
@@ -268,7 +268,7 @@ class Mail_Reset_Aliases(models.Model):
             active=self.active
         )
 
-        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, sql)
+        _run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
 
     @api.constrains('name')
     def _check_address(self):
