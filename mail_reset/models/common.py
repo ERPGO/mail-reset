@@ -49,6 +49,9 @@ def _email_is_valid(email):
 def _newline_to_comma(string):
     return string.replace("\n", ",").strip()
 
+def _comma_to_newline(string):
+    return string.replace(",", "\n").strip()
+
 def _is_username(username):
     regex = '[@]'
     if re.search(regex, username):
@@ -102,4 +105,4 @@ def _run_sql_on_maildb(api_url, api_token, namespace, label, sql):
                   stderr=True, stdin=False,
                   stdout=True, tty=False)
 
-    return print(resp)
+    return resp
