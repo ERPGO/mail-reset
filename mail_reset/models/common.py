@@ -71,10 +71,10 @@ def _get_pods(api_url, api_token, namespace, label):
     return pod_list
 
 
-def _get_maildb_name(api_url, api_token, namespace, label):
+def _get_pod_name(api_url, api_token, namespace, label, search):
     pod_list = _get_pods(api_url, api_token, namespace, label)
     for item in pod_list.items:
-        if 'mariadb' in item.metadata.name:
+        if search in item.metadata.name:
             return item.metadata.name
     return False
 
@@ -93,7 +93,7 @@ def _run_sql_on_maildb(api_url, api_token, namespace, label, sql):
     c = configuration
     c.assert_hostname = False
 
-    name = _get_maildb_name(api_url, api_token, namespace, label)
+    name = _get_pod_name(api_url, api_token, namespace, label, search='mariadb')
 
     resp = stream(v1.connect_get_namespaced_pod_exec,
                   name,
