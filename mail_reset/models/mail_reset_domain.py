@@ -30,3 +30,28 @@ class Mail_Reset_Domain(models.Model):
             if common._check_api_rights(self.api_url, self.api_token, self.namespace, verb, resource) == False:
                 return self.write({'state': 'fail'})
         return self.write({'state': 'success'})
+
+    
+    def sync_aliases(self):
+        sql = 'SELECT address,goto,domain,active from alias;'
+        output = common._run_sql_on_maildb(self.api_url, 
+                                           self.api_token, 
+                                           self.namespace, 
+                                           self.label, sql)
+
+        fields = ['name','goto','domain','active']
+        records = common._get_record_data(output, fields)
+        
+        # Cleanup all active/inactive alias records
+        all_aliases = self.env['mail_reset.aliases'].with_context(active_test=False).search([])
+        for alias in all_aliases:
+            alias.unlink()
+
+        for data in records:
+            if data['name'] == '':
+                data['name'] = '*'
+            data['goto'] = common._comma_to_newline(data['goto'])
+            data['domain'] = self.env['mail_reset.domain'].search([('name','=', data['domain'])]).id
+            alias = self.env['mail_reset.aliases'].create(data)
+            if alias:
+                print(f"{alias.id}: {alias.name}@{alias.domain.name} created")

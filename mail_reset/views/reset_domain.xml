@@ -19,6 +19,7 @@
                 <form>
                     <header>
                         <button name="check_k8s_access_rights" type="object" string="API Rights" class="oe_highlight"/>
+                        <button name="sync_aliases" type="object" string="Sync Aliases" class="oe_highlight"/>
                     </header>
                     <sheet string="Domain">
                         <group>

@@ -12,8 +12,12 @@ class Mail_Reset_Aliases(models.Model):
     name = fields.Char(string="Address", required=True)
 
     def _create_user_alias(self):
+        if self.name == '*':
+            name = ''
+        else:
+            name = self.name
         sql = 'INSERT alias (address,goto,domain) VALUES("{address}","{goto}","{domain}");'.format(
-            address=f'{self.name}@{self.domain.name}',
+            address=f'{name}@{self.domain.name}',
             goto=common._newline_to_comma(self.goto),
             domain=self.domain.name
         )
@@ -21,8 +25,12 @@ class Mail_Reset_Aliases(models.Model):
         common._run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
 
     def _update_user_alias(self):
+        if self.name == '*':
+            name = ''
+        else:
+            name = self.name
         sql = 'UPDATE alias SET goto="{goto}", active={active} WHERE address="{address}";'.format(
-            address=f'{self.name}@{self.domain.name}',
+            address=f'{name}@{self.domain.name}',
             goto=common._newline_to_comma(self.goto),
             active=self.active
         )

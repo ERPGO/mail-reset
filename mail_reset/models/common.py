@@ -25,6 +25,17 @@ def _check_api_rights(api_url, api_token, namespace, verb, resource):
     else:
         return output['status']['allowed']
     
+def _get_record_data(output, fields):
+    outlist = output.splitlines()[1:]
+    record_data = []
+    for l in outlist:
+        l = l.split('\t')
+        data = dict(zip(fields, l))
+        data['name'] = data['name'].split('@')[0]
+        data['active'] = int(data['active'])
+        record_data.append(data)
+    return record_data
+
 def now(**kwargs):
     return datetime.now() + timedelta(**kwargs)
 
