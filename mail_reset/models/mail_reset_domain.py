@@ -2,6 +2,8 @@
 
 from . import common
 from odoo import models, fields, api
+from odoo.exceptions import Warning, ValidationError
+
 
 class Mail_Reset_Domain(models.Model):
     _name = 'mail_reset.domain'
@@ -19,6 +21,12 @@ class Mail_Reset_Domain(models.Model):
         ('fail', 'Fail'),
         ], string='Status', copy=False, index=True, default='draft', readonly=True)
     
+
+    @api.constrains('name')
+    def _fix_name(self):
+        if not "." in self.name:
+            raise ValidationError('Name should be domain like "example.com"')
+
     def check_k8s_access_rights(self):
         A = [('get','pods'),
              ('list','pods'),
@@ -33,7 +41,7 @@ class Mail_Reset_Domain(models.Model):
 
     
     def sync_aliases(self):
-        sql = 'SELECT address,goto,domain,active from alias;'
+        sql = f'SELECT address,goto,domain,active from alias WHERE domain = "{self.name.lower()}";'
         output = common._run_sql_on_maildb(self.api_url, 
                                            self.api_token, 
                                            self.namespace, 
@@ -48,10 +56,37 @@ class Mail_Reset_Domain(models.Model):
             alias.unlink()
 
         for data in records:
+            data['name'] = data['name'].split('@')[0]
             if data['name'] == '':
                 data['name'] = '*'
             data['goto'] = common._comma_to_newline(data['goto'])
             data['domain'] = self.env['mail_reset.domain'].search([('name','=', data['domain'])]).id
+            
             alias = self.env['mail_reset.aliases'].create(data)
+            
             if alias:
                 print(f"{alias.id}: {alias.name}@{alias.domain.name} created")
+
+    def sync_mailboxes(self):
+        sql = f'SELECT name,email_other,local_part,domain,quota,active from mailbox WHERE domain = "{self.name.lower()}";'
+        output = common._run_sql_on_maildb(self.api_url, 
+                                           self.api_token, 
+                                           self.namespace, 
+                                           self.label, sql)
+
+        fields = ['name','recovery_email','username','domain','quota','active']
+        records = common._get_record_data(output, fields)
+
+        # Cleanup all active/inactive mailbox records
+        all_mailboxes = self.env['mail_reset.users'].with_context(active_test=False).search([])
+        for mailbox in all_mailboxes:
+            mailbox.unlink()
+
+        for data in records:
+            data['quota'] = common._reverse_quota_value(int(data['quota']))
+            data['domain'] = self.env['mail_reset.domain'].search([('name','=', data['domain'])]).id
+
+            mailbox = self.env['mail_reset.users'].create(data)
+
+            if mailbox:
+                print(f"{mailbox.id}: {mailbox.name}@{mailbox.domain.name} created")

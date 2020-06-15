@@ -31,8 +31,9 @@ def _get_record_data(output, fields):
     for l in outlist:
         l = l.split('\t')
         data = dict(zip(fields, l))
-        data['name'] = data['name'].split('@')[0]
         data['active'] = int(data['active'])
+#         data['quota'] = int(data['quota'])
+#         data['name'] = data['name'].split('@')[0]
         record_data.append(data)
     return record_data
 
@@ -69,7 +70,16 @@ def _is_username(username):
         return True
     else:
         return False
-    
+
+def _calculate_quota_value(quota):
+    value = quota * 1024000
+    return value
+
+def _reverse_quota_value(quota):
+    value = quota / 1024000
+    return value
+
+
 def _get_k8s_conf(api_url, api_token):
     configuration = client.Configuration()
     configuration.api_key["authorization"] = api_token

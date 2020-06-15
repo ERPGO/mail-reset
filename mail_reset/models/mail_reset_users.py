@@ -86,11 +86,6 @@ class Mail_Reset_Users(models.Model):
             rec._set_email()
         return res
                 
-
-    def _calculate_quota_value(self):
-        value = self.quota * 1024000
-        return value
-
     def _create_mail_user(self):
         
         random_password = common._generate_password()
@@ -102,7 +97,7 @@ class Mail_Reset_Users(models.Model):
             username=self.username,
             maildir=f'{self.domain.name}/{self.username}/',
             domain=self.domain.name,
-            quota=self._calculate_quota_value()
+            quota=common._calculate_quota_value(self.quota)
         )
         
         common._run_sql_on_maildb(self.domain.api_url, self.domain.api_token, self.domain.namespace, self.domain.label, sql)
@@ -117,7 +112,7 @@ class Mail_Reset_Users(models.Model):
             username=self.email,
             name=self.name,
             recovery_email=self.recovery_email,
-            quota=self._calculate_quota_value(),
+            quota=common._calculate_quota_value(self.quota),
             active=self.active
         )
         
@@ -150,8 +145,8 @@ class Mail_Reset_Users(models.Model):
         record._create_mail_user()
         return record
 
-    def unlink(self):
-        raise Warning('Cannot remove mail user! Please instead archive the record')
+#     def unlink(self):
+#         raise Warning('Cannot remove mail user! Please instead archive the record')
         
     def write(self, vals):
         res = super(Mail_Reset_Users, self).write(vals)
