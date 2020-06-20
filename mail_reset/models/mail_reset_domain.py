@@ -37,6 +37,7 @@ class Mail_Reset_Domain(models.Model):
         for verb, resource in A:
             if common._check_api_rights(self.api_url, self.api_token, self.namespace, verb, resource) == False:
                 return self.write({'state': 'fail'})
+        self._domain_active_in_db()
         return self.write({'state': 'success'})
 
     
@@ -90,3 +91,22 @@ class Mail_Reset_Domain(models.Model):
 
             if mailbox:
                 print(f"{mailbox.id}: {mailbox.name}@{mailbox.domain.name} created")
+
+    def _domain_active_in_db(self):
+        sql = f'SELECT * from domain where ( domain = "{self.name.lower()}" AND active = 1);'
+        try:
+            output = common._run_sql_on_maildb(self.api_url, 
+                                           self.api_token, 
+                                           self.namespace, 
+                                           self.label, sql)
+            if output:
+                if self.name.lower() == output.splitlines()[1:][0].split('\t')[0]:
+                    return True
+            else:
+                raise Warning(f"Domain: {self.name.lower()} => doesn't exists")
+        except:
+            raise Warning('Connection to Mailserver database failed!')
+        
+        return False
+        
+        

@@ -32,8 +32,6 @@ def _get_record_data(output, fields):
         l = l.split('\t')
         data = dict(zip(fields, l))
         data['active'] = int(data['active'])
-#         data['quota'] = int(data['quota'])
-#         data['name'] = data['name'].split('@')[0]
         record_data.append(data)
     return record_data
 
