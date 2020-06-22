@@ -1,6 +1,23 @@
 <odoo>
   <data>
       
+      <record model="ir.actions.act_window" id="mail_reset_domain_users_window">
+          <field name="name">Mail Domain Users</field>
+          <field name="res_model">mail_reset.users</field>
+          <field name="view_mode">tree,form</field> 
+          <field name="domain">[('domain', '=', active_id)]</field>
+          <field name="context">{'search_default_domain': active_id,'default_domain': active_id}</field>
+      </record>
+
+      <record model="ir.actions.act_window" id="mail_reset_domain_aliases_window">
+          <field name="name">Mail Domain Aliases</field>
+          <field name="res_model">mail_reset.aliases</field>
+          <field name="view_mode">tree,form</field> 
+          <field name="domain">[('domain', '=', active_id)]</field>
+          <field name="context">{'search_default_domain': active_id,'default_domain': active_id}</field>
+      </record>
+
+
     <record model="ir.ui.view" id="mail_reset_domain_list">
           <field name="name">Mail Domain list</field>
           <field name="model">mail_reset.domain</field>
@@ -56,22 +73,6 @@
           <field name="name">Mail Domain</field>
           <field name="res_model">mail_reset.domain</field>
           <field name="view_mode">tree,form</field> 
-      </record>
-
-      <record model="ir.actions.act_window" id="mail_reset_domain_users_window">
-          <field name="name">Mail Domain Users</field>
-          <field name="res_model">mail_reset.users</field>
-          <field name="view_mode">tree,form</field> 
-          <field name="domain">[('domain', '=', active_id)]</field>
-          <field name="context">{'search_default_domain': active_id,'default_domain': active_id}</field>
-      </record>
-      
-      <record model="ir.actions.act_window" id="mail_reset_domain_aliases_window">
-          <field name="name">Mail Domain Aliases</field>
-          <field name="res_model">mail_reset.aliases</field>
-          <field name="view_mode">tree,form</field> 
-          <field name="domain">[('domain', '=', active_id)]</field>
-          <field name="context">{'search_default_domain': active_id,'default_domain': active_id}</field>
       </record>
 
       <menuitem name="Mail Domain" id="mail_reset.menu_domain" parent="mail_reset.menu_root" 
