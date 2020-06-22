@@ -21,7 +21,7 @@ def _check_api_rights(api_url, api_token, namespace, verb, resource):
     response = requests.post(url, json=data, headers=hed, verify=False)
     output = response.json()
     if output['status'] == 'Failure':
-        raise Warning('You are NOT authorized!')
+        return False
     else:
         return output['status']['allowed']
     
