@@ -56,11 +56,11 @@
 
       
       
-      <menuitem name="Mail Reset" id="mail_reset.menu_root" groups="base.group_system" 
+      <menuitem name="Mail Reset" id="mail_reset.menu_root" groups="base.group_no_one" 
                 web_icon="mail_reset,static/description/icon.png"/>
       
       <menuitem name="Mail Users" id="mail_reset.menu_users" parent="mail_reset.menu_root" 
-                action="mail_reset_users_window" groups="base.group_system" sequence="2"/>
+                action="mail_reset_users_window" groups="base.group_no_one" sequence="2"/>
       
   </data>
 </odoo>
