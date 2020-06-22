@@ -1,3 +1,3 @@
-# mail-reset
+# mail-service
 
-This Odoo module will connect to kubernetes cluster via given API token and API URL and will serve self-service Mail Reset Application
+This Odoo module will connect to kubernetes cluster via given API token and API URL to manage Postfix Mariadb backend tool similar to Postfixadmin

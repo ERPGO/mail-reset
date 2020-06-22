@@ -4,6 +4,8 @@ from odoo.exceptions import UserError
 import werkzeug
 import time
 
+from ..models import common
+
 class MailReset(http.Controller):
         
     def _get_user(self, email):
@@ -64,8 +66,10 @@ class MailReset(http.Controller):
             if http.request.httprequest.method == 'POST':
                 email = qcontext.get('email')
                 if not email:
-                    raise UserError(_("The form was not properly filled in."))
-                if not self._email_registered(email):
+                    raise UserError(_("The form was not properly filled in!"))
+                elif not common._email_is_valid(email):
+                    raise UserError(_("Please enter valid email address!"))
+                elif not self._email_registered(email):
                     raise UserError(_(f"{email} is not registered!"))
                 user = self._get_user(email)
                 user.sudo().reset_prepare()

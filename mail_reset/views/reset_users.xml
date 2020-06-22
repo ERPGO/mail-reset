@@ -25,13 +25,15 @@
                     <sheet string="Users">
                         <group>
                           <group>
+                            <field name="active"/>
                             <field name="name" modifiers="{}"/>
                             <field name="email" modifiers="{&quot;readonly&quot;: true}"/>
                             <field name="recovery_email" modifiers="{}"/>
+                            <field name="quota"/>
                           </group>
                           <group>
-                            <field name="username" on_change="1" modifiers="{}"/>
-                            <field name="domain" on_change="1" domain='[["state","=","success"]]' options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}"/>
+                            <field name="username" on_change="1" modifiers="{}" attrs="{'readonly': [('id', '!=', False)]}"/>
+                            <field name="domain" on_change="1" domain='[["state","=","success"]]' options="{'no_quick_create':True,'no_create_edit':True,'no_open': True,}" attrs="{'readonly': [('id', '!=', False)]}"/>
                           </group>
                           <group>
                             <field name="reset_valid"/>
@@ -54,11 +56,11 @@
 
       
       
-      <menuitem name="Mail Reset" id="mail_reset.menu_root" groups="base.group_system" 
+      <menuitem name="Mail Reset" id="mail_reset.menu_root" groups="base.group_no_one" 
                 web_icon="mail_reset,static/description/icon.png"/>
       
       <menuitem name="Mail Users" id="mail_reset.menu_users" parent="mail_reset.menu_root" 
-                action="mail_reset_users_window" groups="base.group_system" sequence="2"/>
+                action="mail_reset_users_window" groups="base.group_no_one" sequence="2"/>
       
   </data>
 </odoo>

@@ -6,7 +6,7 @@
             <field name="model_id" ref="mail_reset.model_mail_reset_users"/>
             <field name="email_from"><![CDATA[Erpgo Mail Service <mail-reset@erpgo.az>]]></field>
             <field name="email_to">${object.recovery_email|safe}</field>
-            <field name="subject">Mail password reset</field>
+            <field name="subject">Mail password reset ${object.domain.name.upper()}</field>
             <field name="reply_to">support@erpgo.az</field>
             <field name="body_html"><![CDATA[
 <div style="font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;padding:0px;width:600px;margin:auto;background: #FFFFFF repeat top /100%;color:#777777">
@@ -20,8 +20,8 @@
 </div>
 <div style="padding:0px;width:600px;margin:auto;background: #FFFFFF repeat top /100%;color:#777777">
     <p>Dear ${object.name},</p>
-    <p>A password reset was requested for the ERPGO email user which recovery email set to this one.</p>
-    <p>You may change your ERPGO mail password by following this link which will remain valid during 24 hours:</p>
+    <p>A password reset was requested for the ${object.domain.name.upper()} email user which recovery email set to this one.</p>
+    <p>You may change your ${object.domain.name.upper()} mail password by following this link which will remain valid during 24 hours:</p>
     <div style="text-align: center; margin-top: 16px;">
         <a href="${object.reset_url}" style="padding: 5px 10px; font-size: 12px; line-height: 18px; color: #FFFFFF; border-color:#875A7B; text-decoration: none; display: inline-block; margin-bottom: 0px; font-weight: 400; text-align: center; vertical-align: middle; cursor: pointer; white-space: nowrap; background-image: none; background-color: #875A7B; border: 1px solid #875A7B; border-radius:3px">Change password</a>
     </div>
