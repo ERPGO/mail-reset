@@ -15,7 +15,7 @@ class Mail_Reset_Domain(models.Model):
     label = fields.Char("Label selector:", required=True, default="app=mailserver")
     api_url = fields.Char(string="API URL", required=True)
     api_token = fields.Char(string="API Token", required=True)
-    last_status = fields.Text(string="Last status info:", readonly=True)
+    last_status = fields.Text(string="Last status info:", readonly=True, default='Never Connected!')
     first_connection = fields.Boolean(string="First connection", default=False)
     state = fields.Selection([
         ('draft', 'Draft'),
@@ -23,6 +23,28 @@ class Mail_Reset_Domain(models.Model):
         ('fail', 'Fail'),
         ], string='Status', copy=False, index=True, default='draft', readonly=True)
     
+
+    users_count = fields.Integer(string="Users count", compute="_count_mailboxes")
+    aliases_count = fields.Integer(string="Aliases count", compute="_count_aliases")
+    
+    
+    _sql_constraints = [ ('name_unique','UNIQUE(name)','Domain name must be unique') ]
+    
+    def _count_mailboxes(self):
+        results = self.env['mail_reset.users'].read_group([('domain', 'in', self.ids)], ['domain'], ['domain'])
+        dic = {}
+        for x in results:
+            dic[x['domain'][0]] = x['domain_count']
+        for record in self:
+            record['users_count'] = dic.get(record.id, 0)
+
+    def _count_aliases(self):
+        results = self.env['mail_reset.aliases'].read_group([('domain', 'in', self.ids)], ['domain'], ['domain'])
+        dic = {}
+        for x in results:
+            dic[x['domain'][0]] = x['domain_count']
+        for record in self:
+            record['aliases_count'] = dic.get(record.id, 0)
 
     @api.constrains('name')
     def _fix_name(self):
