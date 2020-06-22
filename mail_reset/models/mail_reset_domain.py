@@ -62,7 +62,7 @@ class Mail_Reset_Domain(models.Model):
         records = common._get_record_data(output, fields)
         
         # Cleanup all active/inactive alias records
-        all_aliases = self.env['mail_reset.aliases'].with_context(active_test=False).search([])
+        all_aliases = self.env['mail_reset.aliases'].with_context(active_test=False).search([('domain','=',self.id)])
         for alias in all_aliases:
             alias.unlink()
 
@@ -89,7 +89,7 @@ class Mail_Reset_Domain(models.Model):
         records = common._get_record_data(output, fields)
 
         # Cleanup all active/inactive mailbox records
-        all_mailboxes = self.env['mail_reset.users'].with_context(active_test=False).search([])
+        all_mailboxes = self.env['mail_reset.users'].with_context(active_test=False).search([('domain','=',self.id)])
         for mailbox in all_mailboxes:
             mailbox.unlink()
 
