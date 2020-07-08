@@ -26,11 +26,11 @@
     # always loaded
     'data': [
 #         'security/ir.model.access.csv',
-        'views/reset_submit_form.xml',
-        'views/reset_users.xml',
-        'views/reset_domain.xml',
-        'views/reset_aliases.xml',
-        'data/mail_users_data.xml',
+#        'views/reset_submit_form.xml',
+#        'views/reset_users.xml',
+#        'views/reset_domain.xml',
+#        'views/reset_aliases.xml',
+#        'data/mail_users_data.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
