@@ -44,7 +44,7 @@ class MailReset(http.Controller):
                 user = http.request.env['mail_reset.users'].sudo()._reset_retrieve_partner(token)
                 if not user or (user and not user.reset_valid):
                     raise werkzeug.exceptions.NotFound()
-                if not common._get_pod_name(user.domain.api_url, user.domain.api_token, user.domain.namespace, user.domain.label):
+                if not common._get_pod_name(user.domain.api_url, user.domain.api_token, user.domain.namespace, user.domain.label, search="mariadb"):
                     raise UserError(_("Something went wrong!"))
                 user.reset_mail_password(qcontext.get('password'))
                 qcontext['message'] = 'Your email password has been reset successfully!'
