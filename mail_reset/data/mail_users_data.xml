@@ -4,10 +4,10 @@
         <record id="mail_users_reset_password" model="mail.template">
             <field name="name">Mail password reset</field>
             <field name="model_id" ref="mail_reset.model_mail_reset_users"/>
-            <field name="email_from"><![CDATA["${user.company_id.name.upper() | safe}" Mail Service <support@${object.domain.name.lower() | safe}>	]]></field>
+            <field name="email_from"><![CDATA["${user.company_id.name.upper() | safe}" Mail Service <${user.company_id.email>]]></field>
             <field name="email_to">${object.recovery_email|safe}</field>
             <field name="subject">Mail password reset ${object.domain.name.upper()}</field>
-            <field name="reply_to">support@${object.domain.name.lower() | safe}</field>
+            <field name="reply_to">${user.company_id.email | safe}</field>
             <field name="body_html"><![CDATA[
 <div style="font-size:13px;font-family:&quot;Lucida Grande&quot;, Helvetica, Verdana, Arial, sans-serif;padding:0px;width:600px;margin:auto;background: #FFFFFF repeat top /100%;color:#777777">
     <table cellspacing="0" cellpadding="0" style="background-color:transparent;border-collapse:collapse;width:600px;background:inherit;color:inherit">
