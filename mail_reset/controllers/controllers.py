@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
--*- coding: future_fstrings -*-
+# -*- coding: future_fstrings -*-
 from odoo import http, _
 from odoo.exceptions import UserError
 import werkzeug
