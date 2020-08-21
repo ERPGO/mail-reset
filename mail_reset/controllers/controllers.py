@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+-*- coding: future_fstrings -*-
 from odoo import http, _
 from odoo.exceptions import UserError
 import werkzeug
@@ -7,7 +8,7 @@ import time
 from ..models import common
 
 class MailReset(http.Controller):
-        
+
     def _get_user(self, email):
         domain = email.split('@')[1]
         username = email.split('@')[0]
@@ -16,13 +17,13 @@ class MailReset(http.Controller):
             ('active','=', True),
             ('domain','=',domain)],limit=1)
         return username
-    
+
     def _email_registered(self, email):
         if self._get_user(email):
             return True
         else:
             return False
-    
+
     @http.route('/mail_reset/reset_password', type='http', auth='public', website=True, sitemap=False)
     def reset_mail_password_form(self, **kw):
         qcontext = http.request.params.copy()
@@ -57,7 +58,7 @@ class MailReset(http.Controller):
         response = http.request.render('mail_reset.reset_password', qcontext)
         response.headers['X-Frame-Options'] = 'DENY'
         return response
-            
+
 
     @http.route('/mail_reset/submit', type='http', auth='public', website=True, csrf=True)
     def reset_form_submit(self, **kw):
